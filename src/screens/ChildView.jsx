@@ -7,7 +7,7 @@ import TicketShape from '../components/TicketShape'
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
 
-export default function ChildView({ childId, state, onUpdate, onBack }) {
+export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop, onSuggestReward }) {
   const child = CHILDREN[childId]
   const clock = useClock()
   const [activeTab, setActiveTab] = useState('morning')
@@ -499,7 +499,7 @@ export default function ChildView({ childId, state, onUpdate, onBack }) {
               border: 'none', cursor: 'pointer',
               flexShrink: 0,
               fontFamily: "'Hanken Grotesque', sans-serif",
-            }}>Open →</button>
+            }} onClick={onOpenShop}>Open →</button>
           </div>
 
           <div style={{
@@ -528,7 +528,7 @@ export default function ChildView({ childId, state, onUpdate, onBack }) {
               border: 'none', cursor: 'pointer',
               flexShrink: 0,
               fontFamily: "'Hanken Grotesque', sans-serif",
-            }}>Ask →</button>
+            }} onClick={onSuggestReward}>Ask →</button>
           </div>
         </div>
       </div>

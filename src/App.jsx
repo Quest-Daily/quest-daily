@@ -4,6 +4,8 @@ import SignIn from './screens/SignIn'
 import ParentPin from './screens/ParentPin'
 import FamilyHome from './screens/FamilyHome'
 import ChildView from './screens/ChildView'
+import Shop from './screens/Shop'
+import SuggestReward from './screens/SuggestReward'
 import ParentDashboard from './screens/ParentDashboard'
 
 export default function App() {
@@ -12,10 +14,21 @@ export default function App() {
   const [childState, setChildState] = useState(() => {
     try {
       const saved = localStorage.getItem('quest-daily-state')
-      return saved ? JSON.parse(saved) : createInitialState()
-    } catch {
-      return createInitialState()
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // Migrate old saves: add missing shop fields if absent
+        const initial = createInitialState()
+        Object.keys(initial).forEach(id => {
+          if (parsed[id] && !parsed[id].shopItems) {
+            parsed[id].shopItems = initial[id].shopItems
+            parsed[id].redemptions = []
+            parsed[id].suggestions = []
+          }
+        })
+        return parsed
+      }
+    } catch {}
+    return createInitialState()
   })
 
   useEffect(() => {
@@ -26,17 +39,16 @@ export default function App() {
     setChildState(prev => ({ ...prev, [id]: updater(prev[id]) }))
   }
 
-  function handleSignIn(who) {
-    if (who === 'parent') {
-      setScreen('parent-pin')
-    } else {
-      setCurrentChild(who)
-      setScreen('child-view')
-    }
+  function goToChild(id, nextScreen = 'child-view') {
+    setCurrentChild(id)
+    setScreen(nextScreen)
   }
 
   if (screen === 'signin') {
-    return <SignIn onSelect={handleSignIn} />
+    return <SignIn onSelect={who => {
+      if (who === 'parent') setScreen('parent-pin')
+      else goToChild(who, 'child-view')
+    }} />
   }
 
   if (screen === 'parent-pin') {
@@ -52,7 +64,7 @@ export default function App() {
     return (
       <FamilyHome
         childState={childState}
-        onSelectChild={id => { setCurrentChild(id); setScreen('child-view') }}
+        onSelectChild={id => goToChild(id, 'child-view')}
         onParentView={() => setScreen('parent-pin')}
         onSignOut={() => setScreen('signin')}
       />
@@ -66,6 +78,31 @@ export default function App() {
         state={childState[currentChild]}
         onUpdate={updater => updateChild(currentChild, updater)}
         onBack={() => setScreen('family-home')}
+        onOpenShop={() => setScreen('shop')}
+        onSuggestReward={() => setScreen('suggest-reward')}
+      />
+    )
+  }
+
+  if (screen === 'shop' && currentChild) {
+    return (
+      <Shop
+        childId={currentChild}
+        state={childState[currentChild]}
+        onUpdate={updater => updateChild(currentChild, updater)}
+        onBack={() => setScreen('child-view')}
+        onSuggest={() => setScreen('suggest-reward')}
+      />
+    )
+  }
+
+  if (screen === 'suggest-reward' && currentChild) {
+    return (
+      <SuggestReward
+        childId={currentChild}
+        state={childState[currentChild]}
+        onUpdate={updater => updateChild(currentChild, updater)}
+        onBack={() => setScreen('shop')}
       />
     )
   }
@@ -74,6 +111,7 @@ export default function App() {
     return (
       <ParentDashboard
         childState={childState}
+        onUpdate={updateChild}
         onBack={() => setScreen('family-home')}
         onResetState={() => {
           setChildState(createInitialState())
@@ -83,5 +121,8 @@ export default function App() {
     )
   }
 
-  return <SignIn onSelect={handleSignIn} />
+  return <SignIn onSelect={who => {
+    if (who === 'parent') setScreen('parent-pin')
+    else goToChild(who, 'child-view')
+  }} />
 }

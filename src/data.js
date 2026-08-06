@@ -90,7 +90,31 @@ export const MOODS = [
   { emoji: '😢', label: 'Rough' },
 ]
 
-export function makeInitialChildState() {
+export const DEFAULT_SHOP_ITEMS = {
+  max: [
+    { id: 's1', icon: '🎮', title: 'Extra gaming — 1 hour', ticketPrice: 15 },
+    { id: 's2', icon: '🍕', title: 'Choose Friday dinner', ticketPrice: 20 },
+    { id: 's3', icon: '🎬', title: 'Movie night pick', ticketPrice: 25 },
+    { id: 's4', icon: '💵', title: '$5 tuck shop money', ticketPrice: 30 },
+    { id: 's5', icon: '🏄', title: 'Surfing lesson', ticketPrice: 60 },
+  ],
+  hendrix: [
+    { id: 's1', icon: '🎮', title: 'Extra gaming — 1 hour', ticketPrice: 15 },
+    { id: 's2', icon: '🍦', title: 'Ice cream trip', ticketPrice: 20 },
+    { id: 's3', icon: '🏊', title: 'Extra swim session', ticketPrice: 25 },
+    { id: 's4', icon: '💵', title: '$5 tuck shop money', ticketPrice: 30 },
+    { id: 's5', icon: '⚽', title: 'New soccer ball', ticketPrice: 50 },
+  ],
+  felix: [
+    { id: 's1', icon: '🎮', title: 'Extra gaming — 1 hour', ticketPrice: 15 },
+    { id: 's2', icon: '🍕', title: 'Choose Friday dinner', ticketPrice: 20 },
+    { id: 's3', icon: '🎨', title: 'Art supplies pack', ticketPrice: 25 },
+    { id: 's4', icon: '💵', title: '$5 tuck shop money', ticketPrice: 30 },
+    { id: 's5', icon: '🧸', title: 'New toy — your pick', ticketPrice: 40 },
+  ],
+}
+
+export function makeInitialChildState(childId) {
   return {
     tickets: 0,
     completed: { morning: [], afternoon: [], evening: [] },
@@ -103,13 +127,16 @@ export function makeInitialChildState() {
     mood: null,
     voiceRecording: false,
     claimedSideQuests: [],
+    shopItems: DEFAULT_SHOP_ITEMS[childId] || [],
+    redemptions: [],
+    suggestions: [],
   }
 }
 
 export function createInitialState() {
   return {
     max: {
-      ...makeInitialChildState(),
+      ...makeInitialChildState('max'),
       tickets: 3,
       completed: { morning: ['make-bed', 'brush-teeth'], afternoon: [], evening: [] },
       routines: {
@@ -120,14 +147,14 @@ export function createInitialState() {
       weekDays: [true, true, true, true, true, false, false],
     },
     hendrix: {
-      ...makeInitialChildState(),
+      ...makeInitialChildState('hendrix'),
       tickets: 1,
       completed: { morning: ['make-bed'], afternoon: [], evening: [] },
       streak: 3,
       weekDays: [true, true, true, false, false, false, false],
     },
     felix: {
-      ...makeInitialChildState(),
+      ...makeInitialChildState('felix'),
     },
   }
 }

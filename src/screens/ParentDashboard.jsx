@@ -1,8 +1,35 @@
-import { CHILDREN, CHILD_ORDER, QUESTS } from '../data'
+import { CHILDREN, CHILD_ORDER, QUESTS, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
 
-export default function ParentDashboard({ childState, onBack, onResetState }) {
+export default function ParentDashboard({ childState, onUpdate, onBack, onResetState }) {
   const allQuests = Object.values(QUESTS).flat()
+
+  function handleSuggestion(childId, suggestionId, action) {
+    onUpdate(childId, s => {
+      const suggestion = s.suggestions.find(sg => sg.id === suggestionId)
+      const newSuggestions = s.suggestions.map(sg =>
+        sg.id === suggestionId ? { ...sg, status: action } : sg
+      )
+      let newShopItems = s.shopItems
+      if (action === 'approved' && suggestion) {
+        const newItem = {
+          id: `suggest-${suggestionId}`,
+          icon: '🌟',
+          title: suggestion.title,
+          ticketPrice: 30,
+        }
+        newShopItems = [...s.shopItems, newItem]
+      }
+      return { ...s, suggestions: newSuggestions, shopItems: newShopItems }
+    })
+  }
+
+  // Collect all pending suggestions across all kids
+  const allSuggestions = CHILD_ORDER.flatMap(id =>
+    (childState[id]?.suggestions || [])
+      .filter(s => s.status === 'pending')
+      .map(s => ({ ...s, childId: id }))
+  )
 
   return (
     <div style={{
@@ -151,6 +178,72 @@ export default function ParentDashboard({ childState, onBack, onResetState }) {
           )
         })}
       </div>
+
+      {/* Reward suggestions */}
+      {allSuggestions.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, marginBottom: 6 }}>
+            🌟 Reward wishes
+          </h2>
+          <p style={{ color: '#6f6675', fontSize: 14, marginBottom: 20 }}>
+            Your kids have suggested these rewards. Approve to add to their shop (default price: 30 tickets), or decline.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {allSuggestions.map(s => {
+              const child = CHILDREN[s.childId]
+              return (
+                <div key={s.id} style={{
+                  background: '#fff',
+                  borderRadius: 18,
+                  padding: '18px 22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  boxShadow: '0 3px 12px rgba(58,51,64,.06)',
+                  flexWrap: 'wrap',
+                }}>
+                  <div style={{
+                    width: 38, height: 38,
+                    borderRadius: '50%',
+                    background: child.theme.bg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: "'DM Serif Display', serif",
+                    fontSize: 18, color: child.theme.accent,
+                    flexShrink: 0,
+                  }}>{child.avatar}</div>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{s.title}</div>
+                    {s.note && <div style={{ fontSize: 13, color: '#6f6675', marginTop: 2 }}>{s.note}</div>}
+                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#9a8fa6', marginTop: 3 }}>
+                      {child.name} · {s.date}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => handleSuggestion(s.childId, s.id, 'approved')}
+                      style={{
+                        background: '#e7f0e4', color: '#4e7a4f',
+                        border: 'none', borderRadius: 999,
+                        padding: '9px 18px', fontSize: 13, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                      }}
+                    >✓ Add to shop</button>
+                    <button
+                      onClick={() => handleSuggestion(s.childId, s.id, 'declined')}
+                      style={{
+                        background: '#fbeef0', color: '#b5546a',
+                        border: 'none', borderRadius: 999,
+                        padding: '9px 14px', fontSize: 13,
+                        cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                      }}
+                    >✕</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Coming soon notice */}
       <div style={{
