@@ -26,8 +26,10 @@ export default function Avatar({ child, size = 92, square = false }) {
         justifyContent: 'center',
         fontFamily: "'DM Serif Display', serif",
         fontSize: Math.round(size * 0.4),
+        lineHeight: 1,
         color: child.theme.accent,
         userSelect: 'none',
+        paddingTop: '0.05em',
       }}>
         {child.avatar}
       </div>

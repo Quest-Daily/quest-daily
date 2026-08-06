@@ -76,6 +76,7 @@ export default function SignIn({ onSelect }) {
               <div style={{
                 fontFamily: "'DM Serif Display', serif",
                 fontSize: 27,
+                lineHeight: 1.15,
                 color: '#3a3340',
                 marginTop: 16,
               }}>{child.name}</div>

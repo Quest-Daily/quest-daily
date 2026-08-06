@@ -115,6 +115,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         <h1 style={{
           fontFamily: "'DM Serif Display', serif",
           fontSize: 46,
+          lineHeight: 1.1,
           color: '#3a3340',
           marginTop: 18,
         }}>{child.name}</h1>

@@ -102,11 +102,14 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
                       justifyContent: 'center',
                       fontFamily: "'DM Serif Display', serif",
                       fontSize: 38,
+                      lineHeight: 1,
+                      paddingTop: '0.05em',
                       color: child.theme.accent,
                     }}>{child.avatar}</div>
                     <div style={{
                       fontFamily: "'DM Serif Display', serif",
                       fontSize: 28,
+                      lineHeight: 1.15,
                       color: '#3a3340',
                     }}>{child.name}</div>
                     <div style={{
