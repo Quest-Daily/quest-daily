@@ -1,0 +1,56 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fdf5f1;
+  font-family: 'Hanken Grotesque', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+h1, h2, h3, h4 { margin: 0; }
+
+/* Smooth quest completion animation */
+.quest-done {
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+/* Pulse when ticket is earned */
+@keyframes ticketPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.ticket-pop {
+  animation: ticketPop 0.4s ease-out;
+}
+
+/* Mood hover */
+.mood-option:hover {
+  transform: scale(1.08);
+  transition: transform 0.15s;
+}
+
+/* Button press feel */
+.press-btn {
+  transition: transform 0.1s, opacity 0.1s;
+}
+.press-btn:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}

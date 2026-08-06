@@ -1,0 +1,12 @@
+{
+  "name": "Quest Daily",
+  "short_name": "Quest Daily",
+  "description": "A family chore & rewards app — earn tickets, build streaks, spend in your shop.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf5f1",
+  "theme_color": "#fdf5f1",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
