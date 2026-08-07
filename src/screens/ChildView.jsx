@@ -3,6 +3,7 @@ import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS } from '../data
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
+import { printQuestComplete, printSectionDone } from '../utils/printer'
 
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
@@ -22,6 +23,24 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     const quest = QUESTS[dayPart].find(q => q.id === questId)
     if (!quest) return
     const isDone = state.completed[dayPart].includes(questId)
+    if (!isDone) {
+      const newTickets = state.tickets + quest.tickets
+      const newCompleted = [...state.completed[dayPart], questId]
+      const sectionDone = newCompleted.length === QUESTS[dayPart].length
+      printQuestComplete({
+        childName: child.name,
+        questTitle: quest.title,
+        ticketsEarned: quest.tickets,
+        totalTickets: newTickets,
+      })
+      if (sectionDone) {
+        setTimeout(() => printSectionDone({
+          childName: child.name,
+          section: dayPart,
+          totalTickets: newTickets,
+        }), 2500)
+      }
+    }
     onUpdate(s => ({
       ...s,
       tickets: isDone ? Math.max(0, s.tickets - quest.tickets) : s.tickets + quest.tickets,
@@ -44,6 +63,14 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     const targetMins = targetH * 60 + targetM + (routine.ampm === 'pm' ? 12 * 60 : 0)
     const loggedMins = parseInt(h) * 60 + parseInt(m)
     const onTime = loggedMins <= targetMins
+    if (onTime) {
+      printQuestComplete({
+        childName: child.name,
+        questTitle: `${routine.title} - On time!`,
+        ticketsEarned: 1,
+        totalTickets: state.tickets + 1,
+      })
+    }
     onUpdate(s => ({
       ...s,
       tickets: onTime ? s.tickets + 1 : s.tickets,
@@ -63,6 +90,12 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
   function claimSideQuest(questId) {
     const sq = SIDE_QUESTS.find(q => q.id === questId)
     if (!sq) return
+    printQuestComplete({
+      childName: child.name,
+      questTitle: sq.title,
+      ticketsEarned: sq.tickets,
+      totalTickets: state.tickets + sq.tickets,
+    })
     onUpdate(s => ({
       ...s,
       tickets: s.tickets + sq.tickets,

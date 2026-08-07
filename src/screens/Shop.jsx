@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CHILDREN } from '../data'
 import Avatar from '../components/Avatar'
+import { printRedemption } from '../utils/printer'
 
 export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
   const child = CHILDREN[childId]
@@ -21,6 +22,12 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       ticketsSpent: item.ticketPrice,
       date: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
     }
+    printRedemption({
+      childName: child.name,
+      itemTitle: item.title,
+      ticketPrice: item.ticketPrice,
+      remainingTickets: tickets - item.ticketPrice,
+    })
     onUpdate(s => ({
       ...s,
       tickets: s.tickets - item.ticketPrice,
