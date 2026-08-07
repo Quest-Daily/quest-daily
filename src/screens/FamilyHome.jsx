@@ -1,13 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CHILDREN, CHILD_ORDER, QUESTS } from '../data'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
-import { connect, disconnect, isConnected, isSupported } from '../utils/printer'
+import { connect, disconnect, autoConnect, isConnected, isSupported } from '../utils/printer'
 
 export default function FamilyHome({ childState, onSelectChild, onParentView, onSignOut }) {
   const clock = useClock()
   const [printerConnected, setPrinterConnected] = useState(isConnected())
+
+  useEffect(() => {
+    if (!isConnected()) {
+      autoConnect().then(ok => { if (ok) setPrinterConnected(true) })
+    }
+  }, [])
 
   async function handlePrinter() {
     if (printerConnected) {

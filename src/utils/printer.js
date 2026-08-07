@@ -13,6 +13,22 @@ export function isConnected() {
   return port !== null
 }
 
+export async function autoConnect() {
+  if (!isSupported()) return false
+  try {
+    const ports = await navigator.serial.getPorts()
+    if (ports.length === 0) return false
+    port = ports[0]
+    await port.open({ baudRate: 9600 })
+    writer = port.writable.getWriter()
+    return true
+  } catch (e) {
+    port   = null
+    writer = null
+    return false
+  }
+}
+
 export async function connect() {
   if (!isSupported()) {
     return { ok: false, error: 'Web Serial API not supported. Use Chrome or Edge.' }
