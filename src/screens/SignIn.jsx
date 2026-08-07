@@ -1,5 +1,6 @@
 import { CHILDREN, CHILD_ORDER } from '../data'
 import Avatar from '../components/Avatar'
+import Logo from '../components/Logo'
 
 export default function SignIn({ onSelect }) {
   return (
@@ -14,7 +15,7 @@ export default function SignIn({ onSelect }) {
       fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
-      <div style={{ fontSize: 32, marginBottom: 8 }}>⚔️</div>
+      <div style={{ marginBottom: 8 }}><Logo size={44} /></div>
       <div style={{
         fontFamily: "'Space Mono', monospace",
         fontSize: 12,
