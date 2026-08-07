@@ -35,7 +35,7 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
     <div style={{
       minHeight: '100dvh',
       background: '#fdf5f1',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
       padding: '40px 32px 60px',
     }}>
@@ -225,7 +225,7 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
                         background: '#e7f0e4', color: '#4e7a4f',
                         border: 'none', borderRadius: 999,
                         padding: '9px 18px', fontSize: 13, fontWeight: 600,
-                        cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                        cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
                       }}
                     >✓ Add to shop</button>
                     <button
@@ -234,7 +234,7 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
                         background: '#fbeef0', color: '#b5546a',
                         border: 'none', borderRadius: 999,
                         padding: '9px 14px', fontSize: 13,
-                        cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                        cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
                       }}
                     >✕</button>
                   </div>

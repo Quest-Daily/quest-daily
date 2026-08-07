@@ -40,7 +40,7 @@ export default function ParentPin({ onSuccess, onBack }) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 24px',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
       <button

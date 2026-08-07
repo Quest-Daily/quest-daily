@@ -32,7 +32,7 @@ export default function SuggestReward({ childId, state, onUpdate, onBack }) {
     <div style={{
       minHeight: '100dvh',
       background: '#fdf5f1',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
       padding: '44px 44px 60px',
       maxWidth: 680,
@@ -69,7 +69,7 @@ export default function SuggestReward({ childId, state, onUpdate, onBack }) {
               border: 'none', borderRadius: 999,
               padding: '12px 28px', fontSize: 15, fontWeight: 600,
               cursor: 'pointer',
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
             }}
           >Suggest another</button>
         </div>
@@ -107,7 +107,7 @@ export default function SuggestReward({ childId, state, onUpdate, onBack }) {
                 padding: '16px 20px',
                 borderRadius: 16,
                 border: `2px solid ${title ? child.theme.accent : '#e8dcd6'}`,
-                fontFamily: "'Hanken Grotesque', sans-serif",
+                fontFamily: "'Hanken Grotesk', sans-serif",
                 fontSize: 16,
                 color: '#3a3340',
                 background: '#fff',
@@ -138,7 +138,7 @@ export default function SuggestReward({ childId, state, onUpdate, onBack }) {
                 padding: '16px 20px',
                 borderRadius: 16,
                 border: '2px solid #e8dcd6',
-                fontFamily: "'Hanken Grotesque', sans-serif",
+                fontFamily: "'Hanken Grotesk', sans-serif",
                 fontSize: 15,
                 color: '#3a3340',
                 background: '#fff',
@@ -159,7 +159,7 @@ export default function SuggestReward({ childId, state, onUpdate, onBack }) {
                 border: 'none', borderRadius: 999,
                 padding: '16px', fontSize: 16, fontWeight: 600,
                 cursor: title.trim() ? 'pointer' : 'default',
-                fontFamily: "'Hanken Grotesque', sans-serif",
+                fontFamily: "'Hanken Grotesk', sans-serif",
                 transition: 'background 0.2s',
               }}
             >Send my wish ✨</button>

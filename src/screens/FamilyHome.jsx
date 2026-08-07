@@ -22,7 +22,7 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
       alignItems: 'center',
       justifyContent: 'center',
       padding: '32px 24px',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
       <div style={{
@@ -148,7 +148,7 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
             style={{
               display: 'flex', alignItems: 'center', gap: 9,
               background: '#fff', color: '#3a3340',
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
               fontWeight: 600, fontSize: 16,
               padding: '14px 24px', borderRadius: 999,
               boxShadow: '0 3px 10px rgba(58,51,64,.08)',
@@ -161,7 +161,7 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
             style={{
               display: 'flex', alignItems: 'center', gap: 9,
               background: '#3a3340', color: '#fdf5f1',
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
               fontWeight: 600, fontSize: 16,
               padding: '14px 24px', borderRadius: 999,
               border: 'none', cursor: 'pointer',

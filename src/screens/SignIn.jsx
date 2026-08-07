@@ -11,7 +11,7 @@ export default function SignIn({ onSelect }) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 24px',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
       <div style={{ fontSize: 32, marginBottom: 8 }}>⚔️</div>

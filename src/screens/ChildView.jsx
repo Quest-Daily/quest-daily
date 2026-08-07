@@ -80,7 +80,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     <div style={{
       minHeight: '100dvh',
       background: '#fdf5f1',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
       {/* Back button */}
@@ -422,7 +422,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
                           borderRadius: 999,
                           border: 'none',
                           cursor: 'pointer',
-                          fontFamily: "'Hanken Grotesque', sans-serif",
+                          fontFamily: "'Hanken Grotesk', sans-serif",
                         }}
                       >Clock in</button>
                     </>
@@ -499,7 +499,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
               padding: '9px 18px', borderRadius: 999,
               border: 'none', cursor: 'pointer',
               flexShrink: 0,
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
             }} onClick={onOpenShop}>Open →</button>
           </div>
 
@@ -528,7 +528,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
               padding: '9px 18px', borderRadius: 999,
               border: 'none', cursor: 'pointer',
               flexShrink: 0,
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
             }} onClick={onSuggestReward}>Ask →</button>
           </div>
         </div>
@@ -713,7 +713,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
                           borderRadius: 999,
                           border: 'none',
                           cursor: 'pointer',
-                          fontFamily: "'Hanken Grotesque', sans-serif",
+                          fontFamily: "'Hanken Grotesk', sans-serif",
                         }}
                       >Claim</button>
                     )}

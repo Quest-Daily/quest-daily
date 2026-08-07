@@ -34,7 +34,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
     <div style={{
       minHeight: '100dvh',
       background: '#fdf5f1',
-      fontFamily: "'Hanken Grotesque', sans-serif",
+      fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
       {/* Header */}
@@ -95,7 +95,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         <div style={{
           position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
           background: '#3a3340', color: '#fdf5f1',
-          fontFamily: "'Hanken Grotesque', sans-serif",
+          fontFamily: "'Hanken Grotesk', sans-serif",
           fontWeight: 600, fontSize: 15,
           padding: '14px 28px', borderRadius: 999,
           boxShadow: '0 6px 24px rgba(58,51,64,.25)',
@@ -193,7 +193,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                           background: '#3a3340', color: '#fff',
                           border: 'none', borderRadius: 999,
                           padding: '10px 18px', fontSize: 14, fontWeight: 600,
-                          cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                          cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
                         }}
                       >Yes, buy!</button>
                       <button
@@ -202,7 +202,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                           background: '#f0e8e0', color: '#6f6675',
                           border: 'none', borderRadius: 999,
                           padding: '10px 14px', fontSize: 14,
-                          cursor: 'pointer', fontFamily: "'Hanken Grotesque', sans-serif",
+                          cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
                         }}
                       >Cancel</button>
                     </div>
@@ -216,7 +216,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                         border: 'none', borderRadius: 999,
                         padding: '12px 0', fontSize: 14, fontWeight: 600,
                         cursor: canAfford ? 'pointer' : 'default',
-                        fontFamily: "'Hanken Grotesque', sans-serif",
+                        fontFamily: "'Hanken Grotesk', sans-serif",
                         transition: 'background 0.2s',
                       }}
                     >
@@ -256,7 +256,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
               border: 'none', borderRadius: 999,
               padding: '12px 24px', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', flexShrink: 0,
-              fontFamily: "'Hanken Grotesque', sans-serif",
+              fontFamily: "'Hanken Grotesk', sans-serif",
             }}
           >Suggest a reward →</button>
         </div>
