@@ -113,22 +113,9 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
               >
                 <TicketShape bg={child.theme.bg} stubHeight={58}>
                   <div style={{ padding: '26px 22px 20px', textAlign: 'center' }}>
-                    <div style={{
-                      width: 92,
-                      height: 92,
-                      margin: '0 auto 16px',
-                      borderRadius: 18,
-                      background: '#fff',
-                      boxShadow: `0 4px 14px ${child.theme.shadow}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontFamily: "'DM Serif Display', serif",
-                      fontSize: 38,
-                      lineHeight: 1,
-                      paddingTop: '0.05em',
-                      color: child.theme.accent,
-                    }}>{child.avatar}</div>
+                    <div style={{ marginBottom: 16 }}>
+                      <Avatar child={child} size={92} square />
+                    </div>
                     <div style={{
                       fontFamily: "'DM Serif Display', serif",
                       fontSize: 28,

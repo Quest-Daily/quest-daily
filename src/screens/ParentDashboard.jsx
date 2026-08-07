@@ -1,5 +1,6 @@
 import { CHILDREN, CHILD_ORDER, QUESTS, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
+import { useLocalStorage } from '../hooks'
 
 export default function ParentDashboard({ childState, onUpdate, onBack, onResetState }) {
   const allQuests = Object.values(QUESTS).flat()
@@ -70,6 +71,17 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
             color: '#3a3340',
           }}>Parent dashboard</h1>
         </div>
+      </div>
+
+      {/* Child photos */}
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, marginBottom: 20 }}>Child photos</h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+        gap: 16,
+        marginBottom: 40,
+      }}>
+        {CHILD_ORDER.map(id => <PhotoCard key={id} child={CHILDREN[id]} />)}
       </div>
 
       {/* Kids overview */}
@@ -295,6 +307,73 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
             letterSpacing: '0.06em',
           }}
         >Reset all progress</button>
+      </div>
+    </div>
+  )
+}
+
+function PhotoCard({ child }) {
+  const [photo, setPhoto] = useLocalStorage(`photo_${child.id}`, null)
+
+  function handleFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => setPhoto(ev.target.result)
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 18,
+      padding: '22px 18px',
+      boxShadow: '0 3px 14px rgba(58,51,64,.06)',
+      textAlign: 'center',
+    }}>
+      <div style={{
+        width: 72, height: 72,
+        borderRadius: 16,
+        overflow: 'hidden',
+        margin: '0 auto',
+        background: child.theme.bg,
+        boxShadow: `0 4px 12px ${child.theme.shadow}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {photo ? (
+          <img src={photo} alt={child.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        ) : (
+          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: child.theme.accent }}>
+            {child.avatar}
+          </span>
+        )}
+      </div>
+
+      <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: '#3a3340', margin: '12px 0 14px' }}>
+        {child.name}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <label style={{
+          background: child.theme.bg, color: child.theme.accent,
+          fontSize: 13, fontWeight: 600,
+          padding: '8px 16px', borderRadius: 999,
+          cursor: 'pointer',
+          fontFamily: "'Hanken Grotesk', sans-serif",
+          display: 'inline-block',
+        }}>
+          {photo ? '📷 Change' : '📷 Add photo'}
+          <input type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+        </label>
+        {photo && (
+          <button onClick={() => setPhoto(null)} style={{
+            background: '#fbeef0', color: '#b5546a',
+            border: 'none', borderRadius: 999,
+            padding: '8px 12px', fontSize: 13,
+            cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
+          }}>Remove</button>
+        )}
       </div>
     </div>
   )
