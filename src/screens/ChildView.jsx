@@ -120,14 +120,14 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
           marginTop: 18,
         }}>{child.name}</h1>
         <div style={{
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'Roboto Mono', monospace",
           fontSize: 18,
           letterSpacing: '0.06em',
           color: child.theme.targetColor,
           marginTop: 10,
         }}>{clock.date}</div>
         <div style={{
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "'Roboto Mono', monospace",
           fontWeight: 700,
           fontSize: 50,
           color: '#3a3340',

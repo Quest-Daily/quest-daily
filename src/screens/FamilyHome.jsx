@@ -45,13 +45,13 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
           }}>Daily Quests</h1>
           <div style={{ height: 1, background: '#ece0d8', maxWidth: 560, margin: '22px auto 20px' }} />
           <div style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "'Roboto Mono', monospace",
             fontSize: 'clamp(14px, 2.5vw, 19px)',
             letterSpacing: '0.06em',
             color: '#6f6675',
           }}>{clock.date}</div>
           <div style={{
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "'Roboto Mono', monospace",
             fontWeight: 700,
             fontSize: 'clamp(40px, 8vw, 52px)',
             letterSpacing: '0.02em',
