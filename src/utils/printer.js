@@ -11,7 +11,7 @@ function openReceipt(html) {
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: fit-content; }
+  @page { size: 80mm 100mm; margin: 0; }
   body { font-family: 'Courier New', monospace; font-size: 13px; width: 72mm; color: #000; padding: 4mm 4mm 6mm; }
   .c  { text-align: center; }
   .b  { font-weight: bold; }
@@ -25,11 +25,6 @@ function openReceipt(html) {
 </head><body>${html}
 <script>
 window.onload = function() {
-  var h = document.body.scrollHeight;
-  var heightMm = Math.max(Math.ceil(h * 25.4 / 96) + 4, 90);
-  var s = document.createElement('style');
-  s.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 0; }';
-  document.head.appendChild(s);
   window.print();
   setTimeout(function() { window.close(); }, 600);
 }
