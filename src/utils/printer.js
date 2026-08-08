@@ -12,10 +12,14 @@ function openReceipt(html) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Courier New', monospace; font-size: 13px; width: 72mm; color: #000; padding: 4mm 4mm 6mm; }
-  .c { text-align: center; }
-  .b { font-weight: bold; }
-  hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
-  p { margin: 3px 0; }
+  .c  { text-align: center; }
+  .b  { font-weight: bold; }
+  .sm { font-size: 10.5px; }
+  .gap    { height: 7px; }
+  .gap-sm { height: 3px; }
+  .solid  { border: none; border-top: 1px solid #000; margin: 6px 0; }
+  .row    { display: flex; justify-content: space-between; }
+  .eq     { text-align: center; font-size: 11px; letter-spacing: 1px; margin: 4px 0; }
 </style>
 </head><body>${html}
 <script>
@@ -34,20 +38,21 @@ window.onload = function() {
 
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
-    <div class="c">
-      <p class="b">QUEST DAILY</p>
-      <hr>
-      <p class="b">Quest complete!</p>
-      <p>&nbsp;</p>
-      <p class="b">${childName}</p>
-      <p>${questTitle}</p>
-      <p>&nbsp;</p>
-      <p>${nowDateTime()}</p>
-      <hr>
-      <p>Tickets earned: ${ticketsEarned}</p>
-      <p class="b">Total tickets: ${totalTickets}</p>
-      ${sectionDone ? `<p>&nbsp;</p><p class="b">🎉 All ${section} quests done!</p>` : ''}
-    </div>
+    <div class="c">&#x2694;&nbsp;&nbsp;QUEST DAILY&nbsp;&nbsp;&#x2694;</div>
+    <hr class="solid">
+    <div class="c b">QUEST COMPLETE!</div>
+    <hr class="solid">
+    <div class="gap"></div>
+    <div class="c b">${childName}</div>
+    <div class="c">${questTitle}</div>
+    <div class="gap"></div>
+    <div class="c sm">${nowDateTime()}</div>
+    <div class="gap"></div>
+    <div class="eq">==========================</div>
+    <div class="row"><span>Tickets earned</span><span class="b">${ticketsEarned} 🎟</span></div>
+    <div class="row"><span>Total tickets</span><span class="b">${totalTickets} 🎟</span></div>
+    <div class="eq">==========================</div>
+    ${sectionDone ? `<div class="gap"></div><div class="c b">★ All ${section} quests done! ★</div>` : ''}
   `)
 }
 
@@ -55,21 +60,20 @@ export function printSectionDone() {}
 
 export function printRedemption({ childName, itemTitle, ticketPrice, remainingTickets }) {
   openReceipt(`
-    <div class="c">
-      <p class="b">★ QUEST DAILY ★</p>
-      <hr>
-      <p>REDEMPTION RECEIPT</p>
-      <hr>
-      <p class="b">${childName}</p>
-      <p>redeemed:</p>
-      <p>&nbsp;</p>
-      <p class="b">${itemTitle}</p>
-      <p>&nbsp;</p>
-      <hr>
-      <p>Cost: ${ticketPrice} tickets</p>
-      <p>Remaining: ${remainingTickets} tickets</p>
-      <p>${now()}</p>
-    </div>
+    <div class="c">&#x2694;&nbsp;&nbsp;QUEST DAILY&nbsp;&nbsp;&#x2694;</div>
+    <hr class="solid">
+    <div class="c b">REWARD REDEEMED!</div>
+    <hr class="solid">
+    <div class="gap"></div>
+    <div class="c b">${childName}</div>
+    <div class="c">${itemTitle}</div>
+    <div class="gap"></div>
+    <div class="c sm">${nowDateTime()}</div>
+    <div class="gap"></div>
+    <div class="eq">==========================</div>
+    <div class="row"><span>Tickets spent</span><span class="b">${ticketPrice} 🎟</span></div>
+    <div class="row"><span>Remaining</span><span class="b">${remainingTickets} 🎟</span></div>
+    <div class="eq">==========================</div>
   `)
 }
 
