@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CHILDREN, CHILD_ORDER, QUESTS } from '../data'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
+import Logo from '../components/Logo'
 import TicketShape from '../components/TicketShape'
 import { connect, disconnect, autoConnect, isConnected, isSupported } from '../utils/printer'
 
@@ -58,7 +59,7 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 34, marginBottom: 6 }}>⚔️</div>
+          <div style={{ marginBottom: 6 }}><Logo size={64} /></div>
           <h1 style={{
             fontFamily: "'DM Serif Display', serif",
             fontSize: 'clamp(36px, 6vw, 50px)',

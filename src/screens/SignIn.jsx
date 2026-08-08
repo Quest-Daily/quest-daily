@@ -15,7 +15,7 @@ export default function SignIn({ onSelect }) {
       fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
-      <div style={{ marginBottom: 8 }}><Logo size={44} /></div>
+      <div style={{ marginBottom: 8 }}><Logo size={64} /></div>
       <div style={{
         fontFamily: "'Space Mono', monospace",
         fontSize: 12,
