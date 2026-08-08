@@ -49,8 +49,8 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
     <div class="c sm">${nowDateTime()}</div>
     <div class="gap"></div>
     <div class="eq">==========================</div>
-    <div class="row"><span>Tickets earned</span><span class="b">${ticketsEarned} 🎟</span></div>
-    <div class="row"><span>Total tickets</span><span class="b">${totalTickets} 🎟</span></div>
+    <div class="c">Tickets earned &nbsp;<span class="b">${ticketsEarned} 🎟</span></div>
+    <div class="c">Total tickets &nbsp;<span class="b">${totalTickets} 🎟</span></div>
     <div class="eq">==========================</div>
     ${sectionDone ? `<div class="gap"></div><div class="c b">★ All ${section} quests done! ★</div>` : ''}
   `)
@@ -71,8 +71,8 @@ export function printRedemption({ childName, itemTitle, ticketPrice, remainingTi
     <div class="c sm">${nowDateTime()}</div>
     <div class="gap"></div>
     <div class="eq">==========================</div>
-    <div class="row"><span>Tickets spent</span><span class="b">${ticketPrice} 🎟</span></div>
-    <div class="row"><span>Remaining</span><span class="b">${remainingTickets} 🎟</span></div>
+    <div class="c">Tickets spent &nbsp;<span class="b">${ticketPrice} 🎟</span></div>
+    <div class="c">Remaining &nbsp;<span class="b">${remainingTickets} 🎟</span></div>
     <div class="eq">==========================</div>
   `)
 }
