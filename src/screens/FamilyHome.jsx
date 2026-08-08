@@ -1,34 +1,11 @@
-import { useState, useEffect } from 'react'
 import { CHILDREN, CHILD_ORDER, QUESTS } from '../data'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import Logo from '../components/Logo'
 import TicketShape from '../components/TicketShape'
-import { connect, disconnect, autoConnect, isConnected, isSupported } from '../utils/printer'
 
 export default function FamilyHome({ childState, onSelectChild, onParentView, onSignOut }) {
   const clock = useClock()
-  const [printerConnected, setPrinterConnected] = useState(isConnected())
-
-  useEffect(() => {
-    if (!isConnected()) {
-      autoConnect().then(ok => { if (ok) setPrinterConnected(true) })
-    }
-  }, [])
-
-  async function handlePrinter() {
-    if (printerConnected) {
-      await disconnect()
-      setPrinterConnected(false)
-    } else {
-      const result = await connect()
-      if (result.ok) {
-        setPrinterConnected(true)
-      } else if (result.error) {
-        alert(`Printer error: ${result.error}`)
-      }
-    }
-  }
 
   function questsStatus(state) {
     const all = Object.values(QUESTS).flat()
@@ -166,23 +143,6 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
               border: 'none', cursor: 'pointer',
             }}
           >🚪 Sign out</button>
-          {isSupported() && (
-            <button
-              onClick={handlePrinter}
-              className="press-btn"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 9,
-                background: printerConnected ? '#e7f0e4' : '#fff',
-                color: printerConnected ? '#4e7a4f' : '#3a3340',
-                fontFamily: "'Hanken Grotesk', sans-serif",
-                fontWeight: 600, fontSize: 16,
-                padding: '14px 24px', borderRadius: 999,
-                boxShadow: '0 3px 10px rgba(58,51,64,.08)',
-                border: printerConnected ? '1.5px solid #b8d9b9' : 'none',
-                cursor: 'pointer',
-              }}
-            >{printerConnected ? '🖨️ Printer connected' : '🖨️ Connect printer'}</button>
-          )}
           <button
             onClick={onParentView}
             className="press-btn"

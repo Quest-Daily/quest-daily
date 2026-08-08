@@ -3,7 +3,7 @@ import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS } from '../data
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
-import { printQuestComplete, printSectionDone } from '../utils/printer'
+import { printQuestComplete } from '../utils/printer'
 
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
@@ -32,14 +32,9 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         questTitle: quest.title,
         ticketsEarned: quest.tickets,
         totalTickets: newTickets,
+        sectionDone,
+        section: dayPart,
       })
-      if (sectionDone) {
-        setTimeout(() => printSectionDone({
-          childName: child.name,
-          section: dayPart,
-          totalTickets: newTickets,
-        }), 2500)
-      }
     }
     onUpdate(s => ({
       ...s,
