@@ -25,8 +25,9 @@ function openReceipt(html) {
 <script>
 window.onload = function() {
   var h = document.body.scrollHeight;
+  var heightMm = Math.max(Math.ceil(h * 25.4 / 96) + 5, 90);
   var s = document.createElement('style');
-  s.textContent = '@page { size: 80mm ' + (h + 8) + 'px; margin: 0; }';
+  s.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 0; }';
   document.head.appendChild(s);
   window.print();
   setTimeout(function() { window.close(); }, 600);
