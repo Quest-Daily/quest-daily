@@ -9,16 +9,24 @@ function openReceipt(html) {
   if (!win) return
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
-  @page { size: 80mm auto; margin: 4mm 2mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Courier New', monospace; font-size: 13px; width: 72mm; color: #000; padding: 6mm 4mm; }
+  body { font-family: 'Courier New', monospace; font-size: 13px; width: 72mm; color: #000; padding: 4mm 4mm 6mm; }
   .c { text-align: center; }
   .b { font-weight: bold; }
-  hr { border: none; border-top: 1px dashed #000; margin: 7px 0; }
-  p { margin: 4px 0; }
+  hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+  p { margin: 3px 0; }
 </style>
 </head><body>${html}
-<script>window.onload=function(){window.print();setTimeout(function(){window.close()},600)}</script>
+<script>
+window.onload = function() {
+  var h = document.body.scrollHeight;
+  var s = document.createElement('style');
+  s.textContent = '@page { size: 80mm ' + (h + 8) + 'px; margin: 0; }';
+  document.head.appendChild(s);
+  window.print();
+  setTimeout(function() { window.close(); }, 600);
+}
+</script>
 </body></html>`)
   win.document.close()
 }
