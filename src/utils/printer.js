@@ -1,7 +1,8 @@
-function now() {
-  return new Date().toLocaleTimeString('en-AU', {
-    hour: '2-digit', minute: '2-digit', hour12: true,
-  })
+function nowDateTime() {
+  const d = new Date()
+  const date = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+  const time = d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: true })
+  return `${date} · ${time}`
 }
 
 function openReceipt(html) {
@@ -32,22 +33,20 @@ window.onload = function() {
 }
 
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
-  const heading = sectionDone
-    ? '🎉 ALL ' + (section || '').toUpperCase() + ' QUESTS DONE!'
-    : 'QUEST COMPLETE!'
   openReceipt(`
     <div class="c">
-      <p class="b">★ QUEST DAILY ★</p>
+      <p class="b">QUEST DAILY</p>
       <hr>
-      <p>${heading}</p>
+      <p class="b">Quest complete!</p>
       <p>&nbsp;</p>
       <p class="b">${childName}</p>
       <p>${questTitle}</p>
       <p>&nbsp;</p>
+      <p>${nowDateTime()}</p>
       <hr>
-      <p class="b">+${ticketsEarned} tickets earned</p>
-      <p>Total: ${totalTickets} tickets</p>
-      <p>${now()}</p>
+      <p>Tickets earned: ${ticketsEarned}</p>
+      <p class="b">Total tickets: ${totalTickets}</p>
+      ${sectionDone ? `<p>&nbsp;</p><p class="b">🎉 All ${section} quests done!</p>` : ''}
     </div>
   `)
 }
