@@ -6,11 +6,12 @@ function nowDateTime() {
 }
 
 function openReceipt(html) {
-  const win = window.open('', '_blank', 'width=305,height=100,toolbar=0,menubar=0,location=0,scrollbars=0')
+  const win = window.open('', '_blank', 'width=380,height=500,toolbar=0,menubar=0,location=0,scrollbars=0')
   if (!win) return
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: fit-content; }
   body { font-family: 'Courier New', monospace; font-size: 13px; width: 72mm; color: #000; }
   #wrap { padding: 4mm 4mm 6mm; }
   .c  { text-align: center; }
@@ -21,19 +22,16 @@ function openReceipt(html) {
   .solid  { border: none; border-top: 1px solid #000; margin: 6px 0; }
   .row    { display: flex; justify-content: space-between; }
   .eq     { text-align: center; font-size: 11px; letter-spacing: 1px; margin: 4px 0; }
+  @media print {
+    @page { size: 80mm auto; margin: 0; }
+    html, body { height: fit-content; }
+  }
 </style>
 </head><body><div id="wrap">${html}</div>
 <script>
 window.onload = function() {
-  setTimeout(function() {
-    var h = document.getElementById('wrap').getBoundingClientRect().height;
-    var heightMm = Math.max(Math.ceil(h * 25.4 / 96) + 4, 90);
-    var s = document.createElement('style');
-    s.textContent = '@page { size: 80mm ' + heightMm + 'mm; margin: 0; }';
-    document.head.appendChild(s);
-    window.print();
-    setTimeout(function() { window.close(); }, 600);
-  }, 50);
+  window.print();
+  setTimeout(function() { window.close(); }, 600);
 }
 </script>
 </body></html>`)
