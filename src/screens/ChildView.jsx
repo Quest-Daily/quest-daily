@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CHILDREN, SIDE_QUESTS, NOTICES, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
+import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
@@ -265,17 +266,25 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
             >
               {sticker ? (
                 <div style={{ filter: 'drop-shadow(0 5px 10px rgba(58,51,64,0.22))' }}>
-                  <span style={{
-                    fontSize: size * 0.68,
-                    lineHeight: 1,
-                    display: 'block',
-                    textShadow: [
-                      '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
-                      '-5px 0 0 #fff',    '5px 0 0 #fff',    '0 -5px 0 #fff',   '0 5px 0 #fff',
-                      '-4px -3px 0 #fff', '4px -3px 0 #fff', '-3px -4px 0 #fff','3px -4px 0 #fff',
-                      '-4px 3px 0 #fff',  '4px 3px 0 #fff',  '-3px 4px 0 #fff', '3px 4px 0 #fff',
-                    ].join(', '),
-                  }}>{sticker.emoji}</span>
+                  {sticker.image ? (
+                    <img
+                      src={CUSTOM_STICKER_IMAGES[sticker.id]}
+                      alt={sticker.label}
+                      style={{ width: size * 0.85, height: size * 0.85, objectFit: 'contain', display: 'block' }}
+                    />
+                  ) : (
+                    <span style={{
+                      fontSize: size * 0.68,
+                      lineHeight: 1,
+                      display: 'block',
+                      textShadow: [
+                        '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
+                        '-5px 0 0 #fff',    '5px 0 0 #fff',    '0 -5px 0 #fff',   '0 5px 0 #fff',
+                        '-4px -3px 0 #fff', '4px -3px 0 #fff', '-3px -4px 0 #fff','3px -4px 0 #fff',
+                        '-4px 3px 0 #fff',  '4px 3px 0 #fff',  '-3px 4px 0 #fff', '3px 4px 0 #fff',
+                      ].join(', '),
+                    }}>{sticker.emoji}</span>
+                  )}
                 </div>
               ) : (
                 <span style={{ fontSize: 18, opacity: 0.55 }}>+</span>
@@ -428,7 +437,9 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)' }}
                         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
                       >
-                        {sticker.emoji}
+                        {sticker.image
+                          ? <img src={CUSTOM_STICKER_IMAGES[sticker.id]} alt={sticker.label} style={{ width: 26, height: 26, objectFit: 'contain', display: 'block' }} />
+                          : sticker.emoji}
                         <span style={{
                           fontFamily: "'Space Mono', monospace",
                           fontSize: 8,
