@@ -28,7 +28,7 @@ function openReceipt(html) {
   .c     { text-align: center; }
   .b     { font-weight: 700; }
   .serif { font-family: 'DM Serif Display', serif; }
-  .muted { color: #555; }
+  .muted { color: #222; }
   .xs    { font-size: 9px; }
   .gap    { height: 5px; }
   .gap-sm { height: 2px; }
@@ -73,6 +73,8 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
       </div>
     </div>
     <hr class="dash">
+    <div class="c xs b" style="letter-spacing:0.16em; margin: 4px 0 3px">NICE WORK, ${childName.toUpperCase()}!</div>
+    <div class="c" style="margin-top:2px">${LOGO_SVG}</div>
     ${sectionDone ? `<div class="gap-sm"></div><div class="c xs b" style="letter-spacing:0.12em">&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;</div>` : ''}
   `)
 }
