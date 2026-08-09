@@ -1,4 +1,4 @@
-const LOGO_SVG = `<svg width="28" height="28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+const LOGO_SVG = `<svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g transform="rotate(15,50,50)">
     <polygon points="50,12 47.5,16.5 44,63 56,63 52.5,16.5" fill="#000"/>
     <rect x="29" y="63" width="42" height="8.5" rx="4.25" fill="#000"/>
@@ -24,17 +24,17 @@ function openReceipt(html) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: fit-content; }
-  body { font-family: 'Space Mono', monospace; font-size: 11px; width: 72mm; color: #000; padding: 1mm 4mm 3mm; }
+  body { font-family: 'Space Mono', monospace; font-size: 11px; width: 72mm; color: #000; padding: 2mm 4mm 5mm; }
   .c     { text-align: center; }
   .b     { font-weight: 700; }
   .serif { font-family: 'DM Serif Display', serif; }
   .sans  { font-family: 'Hanken Grotesk', sans-serif; }
   .muted { color: #222; }
   .xs    { font-size: 9px; }
-  .gap-sm { height: 2px; }
-  .solid  { border: none; border-top: 1.5px solid #000; margin: 5px 0; }
-  .dash   { border: none; border-top: 1px dashed #555; margin: 4px 0; }
-  .row    { display: flex; justify-content: space-between; align-items: baseline; margin: 3px 0; }
+  .gap-sm { height: 6px; }
+  .solid  { border: none; border-top: 1.5px solid #000; margin: 7px 0; }
+  .dash   { border: none; border-top: 1px dashed #555; margin: 7px 0; }
+  .row    { display: flex; justify-content: space-between; align-items: baseline; margin: 5px 0; }
 </style>
 </head><body>${html}
 <script>
@@ -49,7 +49,7 @@ document.fonts.ready.then(function() {
 
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
-    <div class="c serif" style="font-size:20px; margin-bottom:1px">Quest Daily</div>
+    <div class="c serif" style="font-size:26px; margin-bottom:1px">Quest Daily</div>
     <hr class="solid">
     <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}</div>
     <div class="gap-sm"></div>
@@ -65,9 +65,9 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
       <span class="serif b" style="font-size:18px; line-height:1">${totalTickets}</span>
     </div>
     <hr class="dash">
-    <div class="c xs b" style="letter-spacing:0.16em; margin: 3px 0 2px">NICE WORK, ${childName.toUpperCase()}!</div>
+    <div class="c xs b" style="letter-spacing:0.16em; margin: 6px 0 4px">NICE WORK, ${childName.toUpperCase()}!</div>
     <div class="c">${LOGO_SVG}</div>
-    ${sectionDone ? `<div class="c xs b" style="letter-spacing:0.12em; margin-top:3px">&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;</div>` : ''}
+    ${sectionDone ? `<div class="c xs b" style="letter-spacing:0.12em; margin-top:5px">&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;</div>` : ''}
   `)
 }
 
@@ -75,7 +75,7 @@ export function printSectionDone() {}
 
 export function printRedemption({ childName, itemTitle, ticketPrice, remainingTickets }) {
   openReceipt(`
-    <div class="c serif" style="font-size:20px; margin-bottom:1px">Quest Daily</div>
+    <div class="c serif" style="font-size:26px; margin-bottom:1px">Quest Daily</div>
     <hr class="solid">
     <div class="xs muted" style="letter-spacing:0.06em">${nowDateTime()}</div>
     <div class="gap-sm"></div>
@@ -91,7 +91,7 @@ export function printRedemption({ childName, itemTitle, ticketPrice, remainingTi
       <span class="serif b" style="font-size:18px; line-height:1">${remainingTickets}</span>
     </div>
     <hr class="dash">
-    <div class="c xs b" style="letter-spacing:0.16em; margin: 3px 0 2px">ENJOY, ${childName.toUpperCase()}!</div>
+    <div class="c xs b" style="letter-spacing:0.16em; margin: 6px 0 4px">ENJOY, ${childName.toUpperCase()}!</div>
     <div class="c">${LOGO_SVG}</div>
   `)
 }
