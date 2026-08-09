@@ -3,7 +3,7 @@ import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS } from '../data
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
-import { printQuestComplete } from '../utils/printer'
+import { printQuestComplete, printQuestSheet } from '../utils/printer'
 
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
@@ -82,6 +82,22 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     onUpdate(s => ({ ...s, voiceRecording: !s.voiceRecording }))
   }
 
+  function printSection(part) {
+    printQuestSheet({
+      childName: child.name,
+      sections: [{ label: DAY_PART_LABELS[part], quests: QUESTS[part] }],
+      allDay: false,
+    })
+  }
+
+  function printAllDay() {
+    printQuestSheet({
+      childName: child.name,
+      sections: DAY_PARTS.map(part => ({ label: DAY_PART_LABELS[part], quests: QUESTS[part] })),
+      allDay: true,
+    })
+  }
+
   function claimSideQuest(questId) {
     const sq = SIDE_QUESTS.find(q => q.id === questId)
     if (!sq) return
@@ -132,6 +148,31 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
           letterSpacing: '0.04em',
         }}
       >← Home</button>
+
+      {/* Print all button */}
+      <button
+        onClick={printAllDay}
+        style={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          zIndex: 100,
+          background: 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(8px)',
+          border: 'none',
+          borderRadius: 999,
+          padding: '10px 18px',
+          fontFamily: "'Space Mono', monospace",
+          fontSize: 10,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: child.theme.accent,
+          cursor: 'pointer',
+          boxShadow: '0 2px 12px rgba(58,51,64,.12)',
+          lineHeight: 1.4,
+          textAlign: 'center',
+        }}
+      >PRINT ALL<br/>DAILY QUESTS</button>
 
       {/* Identity header */}
       <div style={{
@@ -264,18 +305,36 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         </div>
 
         {/* Quest heading + progress */}
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
           <h2 style={{
             fontFamily: "'DM Serif Display', serif",
             fontSize: 32,
             color: '#3a3340',
           }}>{DAY_PART_LABELS[activeTab].split(' ')[1]} quests</h2>
-          <span style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: 13,
-            letterSpacing: '0.08em',
-            color: '#9a8fa6',
-          }}>{doneCurrent} / {totalCurrent} DONE</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 13,
+              letterSpacing: '0.08em',
+              color: '#9a8fa6',
+            }}>{doneCurrent} / {totalCurrent} DONE</span>
+            <button
+              onClick={() => printSection(activeTab)}
+              style={{
+                background: 'none',
+                border: `1.5px solid ${child.theme.accent}`,
+                color: child.theme.accent,
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 10,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '5px 12px',
+                borderRadius: 999,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >Print {DAY_PART_LABELS[activeTab].split(' ')[1]}</button>
+          </div>
         </div>
         <div style={{ height: 10, background: '#efe6dd', borderRadius: 999, overflow: 'hidden', marginBottom: 22 }}>
           <div style={{

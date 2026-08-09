@@ -47,11 +47,13 @@ document.fonts.ready.then(function() {
   win.document.close()
 }
 
+const SECTION_ICONS = { morning: '🌅', afternoon: '☀️', evening: '🌙' }
+
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
     <div class="c serif" style="font-size:26px; margin-bottom:1px">Quest Daily</div>
     <hr class="solid">
-    <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}</div>
+    <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}${section ? ` · ${SECTION_ICONS[section]}` : ''}</div>
     <div class="gap-sm"></div>
     <div class="serif b" style="font-size:22px; line-height:1.1">${childName}</div>
     <div class="sans" style="margin-top:2px"><span class="b">&#x2726; Quest complete:</span> ${questTitle}</div>
@@ -71,6 +73,53 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
 }
 
 export function printSectionDone() {}
+
+export function printQuestSheet({ childName, sections, allDay }) {
+  function nowDate() {
+    return new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const smallLogo = LOGO_SVG.replace('width="40" height="40"', 'width="22" height="22"')
+
+  const sectionBlocks = sections.map(({ label, quests }) => {
+    const [icon, name] = label.split(' ')
+    const questRows = quests.map(q => `
+      <div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px dashed #ddd">
+        <span style="font-size:13px;flex-shrink:0">&#9633;</span>
+        <span style="font-size:11px;flex-shrink:0">${q.icon}</span>
+        <span style="font-size:11px">${q.title}</span>
+      </div>`).join('')
+    const sectionLabel = allDay ? `${icon} ${name.toUpperCase()}` : `${icon} ${name.toUpperCase()} QUESTS`
+    return `<div class="xs b" style="letter-spacing:0.12em;margin:5px 0 3px">${sectionLabel}</div>${questRows}`
+  }).join('<hr class="dash">')
+
+  const stickers = `<div style="display:flex;gap:10px;justify-content:center;margin:8px 0">
+    ${Array(4).fill('<div style="width:32px;height:32px;border:1.5px dashed #aaa;border-radius:50%"></div>').join('')}
+  </div>`
+
+  openReceipt(`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+      ${smallLogo}
+      <div>
+        <div class="b" style="font-size:13px;letter-spacing:0.16em">QUEST DAILY</div>
+        <div class="xs muted" style="letter-spacing:0.12em">DAILY QUEST SHEET</div>
+      </div>
+    </div>
+    <hr class="solid">
+    <div class="c b" style="font-size:13px;letter-spacing:0.12em;margin:4px 0 2px">${childName.toUpperCase()}'S QUESTS</div>
+    <div class="c sans xs muted">${nowDate()}</div>
+    <hr class="dash">
+    ${sectionBlocks}
+    <hr class="solid">
+    <div class="sans xs" style="margin:3px 0">Tickets today: <span style="display:inline-block;width:70px;border-bottom:1px solid #555;vertical-align:bottom"></span></div>
+    ${allDay ? `<div class="sans xs" style="margin:3px 0">Total tickets: <span style="display:inline-block;width:72px;border-bottom:1px solid #555;vertical-align:bottom"></span></div>` : ''}
+    ${stickers}
+    <hr class="dash">
+    <div class="c b" style="margin:4px 0">Great work${allDay ? ' today' : ''}, ${childName}!</div>
+    <div class="c muted" style="letter-spacing:0.3em;font-size:12px">* * * * *</div>
+    <hr class="dash">
+  `)
+}
 
 export function printRedemption({ childName, itemTitle, ticketPrice, remainingTickets }) {
   openReceipt(`
