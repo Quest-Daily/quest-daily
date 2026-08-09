@@ -90,6 +90,46 @@ export const MOODS = [
   { emoji: '😢', label: 'Rough' },
 ]
 
+export const STICKERS = [
+  { id: 'cat',        emoji: '🐱', label: 'Cat',        category: 'animals' },
+  { id: 'dog',        emoji: '🐶', label: 'Dog',        category: 'animals' },
+  { id: 'bunny',      emoji: '🐰', label: 'Bunny',      category: 'animals' },
+  { id: 'fox',        emoji: '🦊', label: 'Fox',        category: 'animals' },
+  { id: 'bear',       emoji: '🐻', label: 'Bear',       category: 'animals' },
+  { id: 'panda',      emoji: '🐼', label: 'Panda',      category: 'animals' },
+  { id: 'koala',      emoji: '🐨', label: 'Koala',      category: 'animals' },
+  { id: 'frog',       emoji: '🐸', label: 'Frog',       category: 'animals' },
+  { id: 'unicorn',    emoji: '🦄', label: 'Unicorn',    category: 'animals' },
+  { id: 'octopus',    emoji: '🐙', label: 'Octopus',    category: 'animals' },
+  { id: 'dino',       emoji: '🦕', label: 'Dino',       category: 'animals' },
+  { id: 'trex',       emoji: '🦖', label: 'T-Rex',      category: 'animals' },
+  { id: 'strawberry', emoji: '🍓', label: 'Strawberry', category: 'treats'  },
+  { id: 'pizza',      emoji: '🍕', label: 'Pizza',      category: 'treats'  },
+  { id: 'icecream',   emoji: '🍦', label: 'Ice Cream',  category: 'treats'  },
+  { id: 'donut',      emoji: '🍩', label: 'Donut',      category: 'treats'  },
+  { id: 'cupcake',    emoji: '🧁', label: 'Cupcake',    category: 'treats'  },
+  { id: 'taco',       emoji: '🌮', label: 'Taco',       category: 'treats'  },
+  { id: 'star',       emoji: '⭐', label: 'Star',       category: 'magic'   },
+  { id: 'sparkles',   emoji: '✨', label: 'Sparkles',   category: 'magic'   },
+  { id: 'rainbow',    emoji: '🌈', label: 'Rainbow',    category: 'magic'   },
+  { id: 'blossom',    emoji: '🌸', label: 'Blossom',    category: 'magic'   },
+  { id: 'heart',      emoji: '💕', label: 'Heart',      category: 'magic'   },
+  { id: 'balloon',    emoji: '🎈', label: 'Balloon',    category: 'magic'   },
+  { id: 'fire',       emoji: '🔥', label: 'Fire',       category: 'vibes'   },
+  { id: 'rocket',     emoji: '🚀', label: 'Rocket',     category: 'vibes'   },
+  { id: 'soccer',     emoji: '⚽', label: 'Soccer',     category: 'vibes'   },
+  { id: 'art',        emoji: '🎨', label: 'Art',        category: 'vibes'   },
+  { id: 'game',       emoji: '🎮', label: 'Gaming',     category: 'vibes'   },
+  { id: 'music',      emoji: '🎵', label: 'Music',      category: 'vibes'   },
+]
+
+export const STICKER_CATEGORIES = [
+  { id: 'animals', label: '🐾 Animals' },
+  { id: 'treats',  label: '🍓 Treats'  },
+  { id: 'magic',   label: '✨ Magic'   },
+  { id: 'vibes',   label: '🔥 Vibes'   },
+]
+
 export const DEFAULT_SHOP_ITEMS = {
   max: [
     { id: 's1', icon: '🎮', title: 'Extra gaming — 1 hour', ticketPrice: 15 },
@@ -130,6 +170,7 @@ export function makeInitialChildState(childId) {
     shopItems: DEFAULT_SHOP_ITEMS[childId] || [],
     redemptions: [],
     suggestions: [],
+    headerStickers: [null, null, null, null],
   }
 }
 
@@ -145,6 +186,7 @@ export function createInitialState() {
       },
       streak: 5,
       weekDays: [true, true, true, true, true, false, false],
+      headerStickers: ['unicorn', 'heart', 'star', null],
     },
     hendrix: {
       ...makeInitialChildState('hendrix'),
@@ -152,9 +194,11 @@ export function createInitialState() {
       completed: { morning: ['make-bed'], afternoon: [], evening: [] },
       streak: 3,
       weekDays: [true, true, true, false, false, false, false],
+      headerStickers: ['rocket', 'soccer', 'dino', null],
     },
     felix: {
       ...makeInitialChildState('felix'),
+      headerStickers: ['bunny', 'rainbow', 'art', null],
     },
   }
 }

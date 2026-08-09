@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS } from '../data'
+import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
@@ -13,6 +13,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
   const clock = useClock()
   const [activeTab, setActiveTab] = useState('morning')
   const [ticketPop, setTicketPop] = useState(false)
+  const [editingSlot, setEditingSlot] = useState(null)
 
   function popTickets() {
     setTicketPop(true)
@@ -174,7 +175,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         }}
       >PRINT ALL<br/>DAILY QUESTS</button>
 
-      {/* Identity header — doubles as noticeboard */}
+      {/* Identity header — noticeboard with sticker slots */}
       <div style={{
         background: child.theme.bg,
         position: 'relative',
@@ -182,7 +183,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         textAlign: 'center',
         overflow: 'hidden',
       }}>
-        {/* Sticky notes scattered around identity */}
+        {/* Sticky notes */}
         {NOTICES.map((note, i) => {
           const positions = [
             { left: '4%',  top: 95  },
@@ -217,6 +218,48 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
                 color: '#6b5a3c',
               }}>{note.text}</div>
             </div>
+          )
+        })}
+
+        {/* Sticker slots */}
+        {[
+          { left: '2%',  top: 68  },
+          { right: '2%', top: 62  },
+          { left: '6%',  bottom: 28 },
+          { right: '2%', bottom: 28 },
+        ].map((pos, i) => {
+          const stickers = state.headerStickers || [null, null, null, null]
+          const stickerId = stickers[i]
+          const sticker = STICKERS.find(s => s.id === stickerId)
+          return (
+            <button
+              key={i}
+              onClick={() => setEditingSlot(i)}
+              title={sticker ? `Change sticker (${sticker.label})` : 'Add a sticker'}
+              style={{
+                position: 'absolute',
+                ...pos,
+                width: 62,
+                height: 62,
+                borderRadius: '50%',
+                background: sticker ? '#fff' : 'rgba(255,255,255,0.35)',
+                border: sticker ? 'none' : `2px dashed ${child.theme.accent}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 34,
+                cursor: 'pointer',
+                boxShadow: sticker ? '0 4px 16px rgba(58,51,64,.14)' : 'none',
+                zIndex: 3,
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                color: child.theme.accent,
+                fontFamily: 'monospace',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              {sticker ? sticker.emoji : <span style={{ fontSize: 20, opacity: 0.6 }}>+</span>}
+            </button>
           )
         })}
 
@@ -264,6 +307,122 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
           >🎟️ {state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
         </div>
       </div>
+
+      {/* Sticker picker */}
+      {editingSlot !== null && (
+        <div
+          onClick={() => setEditingSlot(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(58,51,64,0.45)',
+            zIndex: 200,
+            display: 'flex',
+            alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              background: '#fff',
+              borderRadius: '26px 26px 0 0',
+              padding: '28px 28px 40px',
+              maxHeight: '72vh',
+              overflowY: 'auto',
+            }}
+          >
+            {/* Sheet handle */}
+            <div style={{
+              width: 40, height: 4, borderRadius: 999,
+              background: '#e0d4e8',
+              margin: '0 auto 22px',
+            }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: '#3a3340' }}>
+                Pick a sticker
+              </div>
+              {(state.headerStickers || [])[editingSlot] && (
+                <button
+                  onClick={() => {
+                    onUpdate(s => {
+                      const next = [...(s.headerStickers || [null, null, null, null])]
+                      next[editingSlot] = null
+                      return { ...s, headerStickers: next }
+                    })
+                    setEditingSlot(null)
+                  }}
+                  style={{
+                    background: '#fbeef0', color: '#b5546a',
+                    border: 'none', borderRadius: 999,
+                    padding: '7px 16px', fontSize: 13,
+                    cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
+                  }}
+                >Remove</button>
+              )}
+            </div>
+
+            {STICKER_CATEGORIES.map(cat => (
+              <div key={cat.id} style={{ marginBottom: 24 }}>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 11,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: child.theme.accent,
+                  marginBottom: 12,
+                }}>{cat.label}</div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))',
+                  gap: 10,
+                }}>
+                  {STICKERS.filter(s => s.category === cat.id).map(sticker => {
+                    const isActive = (state.headerStickers || [])[editingSlot] === sticker.id
+                    return (
+                      <button
+                        key={sticker.id}
+                        onClick={() => {
+                          onUpdate(s => {
+                            const next = [...(s.headerStickers || [null, null, null, null])]
+                            next[editingSlot] = sticker.id
+                            return { ...s, headerStickers: next }
+                          })
+                          setEditingSlot(null)
+                        }}
+                        style={{
+                          height: 68,
+                          borderRadius: 18,
+                          background: isActive ? child.theme.bg : '#faf6fc',
+                          border: `2px solid ${isActive ? child.theme.accent : 'transparent'}`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 4,
+                          cursor: 'pointer',
+                          transition: 'transform 0.12s',
+                          fontSize: 30,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)' }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                      >
+                        {sticker.emoji}
+                        <span style={{
+                          fontFamily: "'Space Mono', monospace",
+                          fontSize: 8,
+                          color: isActive ? child.theme.accent : '#b3a9be',
+                          letterSpacing: '0.04em',
+                        }}>{sticker.label.toUpperCase()}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quest section */}
       <div style={{ padding: '38px 44px 10px' }}>
