@@ -223,10 +223,10 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
 
         {/* Sticker slots */}
         {[
-          { left: '1%',  top: 52,     size: 66, rotate: -10 },
-          { right: '3%', top: 78,     size: 60, rotate:   6 },
-          { left: '7%',  bottom: 22,  size: 58, rotate:  13 },
-          { right: '1%', bottom: 42,  size: 64, rotate:  -7 },
+          { left: '8%',   top: 24,    size: 72, rotate: -12 },
+          { right: '13%', top: 14,    size: 68, rotate:   8 },
+          { left: '28%',  bottom: 16, size: 60, rotate:   5 },
+          { right: '1%',  top: 55,    size: 70, rotate:  14 },
         ].map(({ size, rotate, ...pos }, i) => {
           const stickers = state.headerStickers || [null, null, null, null]
           const stickerId = stickers[i]
@@ -239,27 +239,41 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
               style={{
                 position: 'absolute',
                 ...pos,
-                width: size,
-                height: size,
-                borderRadius: '50%',
-                background: sticker ? '#fff' : 'rgba(255,255,255,0.35)',
+                background: 'none',
                 border: sticker ? 'none' : `2px dashed ${child.theme.accent}`,
+                borderRadius: '50%',
+                width: sticker ? size + 16 : 52,
+                height: sticker ? size + 16 : 52,
+                padding: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: size * 0.53,
                 cursor: 'pointer',
-                boxShadow: sticker ? '0 4px 16px rgba(58,51,64,.14)' : 'none',
                 zIndex: 3,
                 transform: `rotate(${rotate}deg)`,
-                transition: 'transform 0.15s, box-shadow 0.15s',
+                transition: 'transform 0.15s',
                 color: child.theme.accent,
-                fontFamily: 'monospace',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${rotate}deg) scale(1.12)` }}
-              onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${rotate}deg) scale(1)` }}
+              onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${rotate}deg) scale(1.1)` }}
+              onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${rotate}deg)` }}
             >
-              {sticker ? sticker.emoji : <span style={{ fontSize: 20, opacity: 0.6 }}>+</span>}
+              {sticker ? (
+                <div style={{ filter: 'drop-shadow(0 5px 10px rgba(58,51,64,0.22))' }}>
+                  <span style={{
+                    fontSize: size * 0.68,
+                    lineHeight: 1,
+                    display: 'block',
+                    textShadow: [
+                      '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
+                      '-5px 0 0 #fff',    '5px 0 0 #fff',    '0 -5px 0 #fff',   '0 5px 0 #fff',
+                      '-4px -3px 0 #fff', '4px -3px 0 #fff', '-3px -4px 0 #fff','3px -4px 0 #fff',
+                      '-4px 3px 0 #fff',  '4px 3px 0 #fff',  '-3px 4px 0 #fff', '3px 4px 0 #fff',
+                    ].join(', '),
+                  }}>{sticker.emoji}</span>
+                </div>
+              ) : (
+                <span style={{ fontSize: 18, opacity: 0.55 }}>+</span>
+              )}
             </button>
           )
         })}
