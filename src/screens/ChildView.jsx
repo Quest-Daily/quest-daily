@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { CHILDREN, SIDE_QUESTS, NOTICES, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
+import { useState, useRef } from 'react'
+import { CHILDREN, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
@@ -8,13 +8,159 @@ import { printQuestComplete, printQuestSheet } from '../utils/printer'
 
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
+const NOTE_COLORS = ['#fae7c4', '#fde8ef', '#d8e6f5', '#e7f0e4']
+const WHITE_OUTLINE = [
+  '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
+  '-5px 0 0 #fff', '5px 0 0 #fff', '0 -5px 0 #fff', '0 5px 0 #fff',
+  '-4px -3px 0 #fff', '4px -3px 0 #fff', '-3px -4px 0 #fff', '3px -4px 0 #fff',
+  '-4px 3px 0 #fff', '4px 3px 0 #fff', '-3px 4px 0 #fff', '3px 4px 0 #fff',
+].join(', ')
+
+function RotateHandle({ onPointerDown }) {
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      style={{
+        position: 'absolute', top: -34, left: '50%', transform: 'translateX(-50%)',
+        width: 24, height: 24, borderRadius: '50%',
+        background: '#fff', border: '2.5px solid #3a3340',
+        cursor: 'grab', zIndex: 30, touchAction: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a3340" strokeWidth="2.5">
+        <path d="M21 12a9 9 0 1 1-9-9" /><polyline points="21 3 21 9 15 9" />
+      </svg>
+    </div>
+  )
+}
+
+function ResizeHandle({ onPointerDown }) {
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      style={{
+        position: 'absolute', bottom: -11, right: -11,
+        width: 22, height: 22, borderRadius: '50%',
+        background: '#fff', border: '2.5px solid #3a3340',
+        cursor: 'nwse-resize', zIndex: 30, touchAction: 'none',
+      }}
+    />
+  )
+}
+
+function DeleteBtn({ onDelete }) {
+  return (
+    <button
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => { e.stopPropagation(); onDelete() }}
+      style={{
+        position: 'absolute', top: -13, right: -13,
+        width: 26, height: 26, borderRadius: '50%',
+        background: '#3a3340', color: '#fff',
+        border: 'none', cursor: 'pointer', fontSize: 15,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30,
+      }}
+    >×</button>
+  )
+}
 
 export default function ChildView({ childId, state, quests, onUpdate, onBack, onOpenShop, onSuggestReward }) {
   const child = CHILDREN[childId]
   const clock = useClock()
   const [activeTab, setActiveTab] = useState('morning')
   const [ticketPop, setTicketPop] = useState(false)
-  const [editingSlot, setEditingSlot] = useState(null)
+  const [selected, setSelected] = useState(null)   // { type: 'sticker'|'note', idx }
+  const [dragState, setDragState] = useState(null)
+  const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
+  const headerRef = useRef(null)
+  const movedRef = useRef(false)
+
+  const headerStickers = state.headerStickers || []
+  const headerNotes = state.notePositions || []
+
+  function updateStickerAt(idx, changes) {
+    onUpdate(s => ({ ...s, headerStickers: (s.headerStickers || []).map((st, i) => i === idx ? { ...st, ...changes } : st) }))
+  }
+  function updateNoteAt(idx, changes) {
+    onUpdate(s => ({ ...s, notePositions: (s.notePositions || []).map((n, i) => i === idx ? { ...n, ...changes } : n) }))
+  }
+
+  function startDrag(e, type, idx, action) {
+    e.stopPropagation()
+    e.preventDefault()
+    movedRef.current = false
+    const rect = headerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const item = (type === 'sticker' ? headerStickers : headerNotes)[idx]
+    if (!item) return
+    const centerX = rect.left + (item.x / 100) * rect.width
+    const centerY = rect.top + (item.y / 100) * rect.height
+    setSelected({ type, idx })
+    setDragState({
+      type, idx, action,
+      startX: e.clientX, startY: e.clientY,
+      origX: item.x, origY: item.y,
+      origSize: item.size || 72,
+      origScale: item.scale || 1,
+      origRotate: item.rotate || 0,
+      centerX, centerY, rect,
+      startAngle: Math.atan2(e.clientY - centerY, e.clientX - centerX),
+      startDist: Math.hypot(e.clientX - centerX, e.clientY - centerY) || 1,
+    })
+  }
+
+  function onHeaderPointerMove(e) {
+    if (!dragState) return
+    e.preventDefault()
+    const { type, idx, action, startX, startY, origX, origY, origSize, origScale, origRotate, centerX, centerY, rect, startAngle, startDist } = dragState
+    if (Math.hypot(e.clientX - startX, e.clientY - startY) > 4) movedRef.current = true
+    const upd = type === 'sticker'
+      ? ch => updateStickerAt(idx, ch)
+      : ch => updateNoteAt(idx, ch)
+    if (action === 'move') {
+      upd({
+        x: Math.max(2, Math.min(98, origX + ((e.clientX - startX) / rect.width) * 100)),
+        y: Math.max(2, Math.min(98, origY + ((e.clientY - startY) / rect.height) * 100)),
+      })
+    } else if (action === 'resize') {
+      const ratio = Math.hypot(e.clientX - centerX, e.clientY - centerY) / startDist
+      if (type === 'sticker') upd({ size: Math.max(32, Math.min(180, origSize * ratio)) })
+      else upd({ scale: Math.max(0.4, Math.min(3, origScale * ratio)) })
+    } else if (action === 'rotate') {
+      const delta = (Math.atan2(e.clientY - centerY, e.clientX - centerX) - startAngle) * (180 / Math.PI)
+      upd({ rotate: origRotate + delta })
+    }
+  }
+
+  function onHeaderPointerUp() { setDragState(null) }
+
+  function handleBoardClick() { if (!movedRef.current) setSelected(null) }
+
+  function addSticker(stickerId) {
+    onUpdate(s => ({ ...s, headerStickers: [...(s.headerStickers || []), { id: stickerId, x: 50, y: 50, size: 72, rotate: 0 }] }))
+    setSelected({ type: 'sticker', idx: headerStickers.length })
+    setShowStickerPicker(false)
+  }
+
+  function addNote() {
+    const color = NOTE_COLORS[headerNotes.length % NOTE_COLORS.length]
+    onUpdate(s => ({
+      ...s,
+      notePositions: [...(s.notePositions || []), { id: `note-${Date.now()}`, x: 50, y: 50, scale: 1, rotate: -1, text: 'Tap to edit...', color }]
+    }))
+    setSelected({ type: 'note', idx: headerNotes.length })
+  }
+
+  function deleteSelected() {
+    if (!selected) return
+    if (selected.type === 'sticker') {
+      onUpdate(s => ({ ...s, headerStickers: (s.headerStickers || []).filter((_, i) => i !== selected.idx) }))
+    } else {
+      onUpdate(s => ({ ...s, notePositions: (s.notePositions || []).filter((_, i) => i !== selected.idx) }))
+    }
+    setSelected(null)
+  }
 
   function popTickets() {
     setTicketPop(true)
@@ -181,258 +327,277 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         }}
       >PRINT ALL<br/>DAILY QUESTS</button>
 
-      {/* Identity header — noticeboard with sticker slots */}
-      <div style={{
-        background: child.theme.bg,
-        position: 'relative',
-        padding: '70px 0 50px',
-        textAlign: 'center',
-        overflow: 'hidden',
-      }}>
-        {/* Sticky notes */}
-        {NOTICES.map((note, i) => {
-          const positions = [
-            { left: '4%',  top: 95  },
-            { left: '21%', top: 22  },
-            { right: '4%', top: 100 },
-          ]
-          const pos = positions[i] || positions[0]
+      {/* Memoboard header — free-form canvas */}
+      <div
+        ref={headerRef}
+        style={{
+          background: child.theme.bg,
+          position: 'relative',
+          minHeight: 380,
+          padding: '70px 0 50px',
+          textAlign: 'center',
+          overflow: 'hidden',
+          touchAction: dragState ? 'none' : 'auto',
+          userSelect: 'none',
+        }}
+        onPointerMove={onHeaderPointerMove}
+        onPointerUp={onHeaderPointerUp}
+        onClick={handleBoardClick}
+      >
+        {/* Notes */}
+        {headerNotes.map((note, idx) => {
+          const isSel = selected?.type === 'note' && selected?.idx === idx
+          const scale = note.scale || 1
+          const w = Math.round(190 * scale)
           return (
-            <div key={note.id} style={{
-              position: 'absolute',
-              ...pos,
-              width: 'clamp(160px, 22vw, 216px)',
-              minHeight: 200,
-              background: '#fae7c4',
-              borderRadius: 3,
-              padding: '32px 20px 22px',
-              boxShadow: '0 6px 14px rgba(58,51,64,.1)',
-              transform: `rotate(${note.rotation}deg)`,
-            }}>
-              <div style={{
+            <div
+              key={note.id}
+              style={{
                 position: 'absolute',
-                top: -10, left: '50%',
-                transform: `translateX(-50%) rotate(${-note.rotation * 1.5}deg)`,
-                width: 84, height: 24,
-                background: note.tape,
-                borderLeft: `1px dashed ${note.tapeBorder}`,
-                borderRight: `1px dashed ${note.tapeBorder}`,
-              }} />
+                left: `${note.x}%`, top: `${note.y}%`,
+                transform: `translate(-50%, -50%) rotate(${note.rotate || 0}deg)`,
+                width: w,
+                zIndex: isSel ? 10 : 2,
+                cursor: dragState?.idx === idx && dragState?.type === 'note' ? 'grabbing' : 'grab',
+                touchAction: 'none',
+              }}
+              onPointerDown={e => { setSelected({ type: 'note', idx }); startDrag(e, 'note', idx, 'move') }}
+              onClick={e => e.stopPropagation()}
+            >
               <div style={{
-                fontFamily: "'Patrick Hand', cursive",
-                fontSize: 'clamp(17px, 2.5vw, 22px)',
-                lineHeight: 1.35,
-                color: '#6b5a3c',
-              }}>{note.text}</div>
+                background: note.color || '#fae7c4',
+                borderRadius: 3,
+                padding: `${Math.round(28 * scale)}px ${Math.round(16 * scale)}px ${Math.round(18 * scale)}px`,
+                boxShadow: isSel
+                  ? '0 0 0 2.5px #3a3340, 0 8px 24px rgba(58,51,64,.22)'
+                  : '0 6px 14px rgba(58,51,64,.12)',
+                minHeight: Math.round(170 * scale),
+                position: 'relative',
+              }}>
+                {/* Tape */}
+                <div style={{
+                  position: 'absolute', top: -10, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: Math.round(72 * scale), height: 22,
+                  background: 'rgba(220,196,80,.38)',
+                  borderLeft: '1px dashed rgba(190,160,40,.5)',
+                  borderRight: '1px dashed rgba(190,160,40,.5)',
+                }} />
+                {/* Note color picker when selected */}
+                {isSel && (
+                  <div style={{ display: 'flex', gap: 5, marginBottom: 8, justifyContent: 'center' }}
+                    onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
+                    {NOTE_COLORS.map(c => (
+                      <button key={c} onClick={() => updateNoteAt(idx, { color: c })} style={{
+                        width: 14, height: 14, borderRadius: '50%', background: c,
+                        border: note.color === c ? '2px solid #3a3340' : '2px solid transparent',
+                        cursor: 'pointer', padding: 0,
+                      }} />
+                    ))}
+                  </div>
+                )}
+                {/* Text — editable when selected */}
+                <textarea
+                  value={note.text}
+                  onChange={e => updateNoteAt(idx, { text: e.target.value })}
+                  onClick={e => e.stopPropagation()}
+                  onPointerDown={e => { if (isSel) e.stopPropagation() }}
+                  readOnly={!isSel}
+                  style={{
+                    width: '100%', border: 'none', background: 'transparent',
+                    fontFamily: "'Patrick Hand', cursive",
+                    fontSize: Math.round(18 * scale),
+                    lineHeight: 1.35, color: '#6b5a3c',
+                    resize: 'none', outline: 'none',
+                    minHeight: Math.round(100 * scale),
+                    cursor: isSel ? 'text' : 'grab',
+                    pointerEvents: isSel ? 'auto' : 'none',
+                  }}
+                />
+              </div>
+              {isSel && (
+                <>
+                  <DeleteBtn onDelete={deleteSelected} />
+                  <ResizeHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'resize') }} />
+                  <RotateHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'rotate') }} />
+                </>
+              )}
             </div>
           )
         })}
 
-        {/* Sticker slots */}
-        {[
-          { left: '8%',   top: 24,    size: 72, rotate: -12 },
-          { right: '13%', top: 14,    size: 68, rotate:   8 },
-          { left: '28%',  bottom: 16, size: 60, rotate:   5 },
-          { right: '1%',  top: 55,    size: 70, rotate:  14 },
-        ].map(({ size, rotate, ...pos }, i) => {
-          const stickers = state.headerStickers || [null, null, null, null]
-          const stickerId = stickers[i]
-          const sticker = STICKERS.find(s => s.id === stickerId)
+        {/* Stickers */}
+        {headerStickers.map((stickerData, idx) => {
+          const def = STICKERS.find(s => s.id === stickerData.id)
+          if (!def) return null
+          const isSel = selected?.type === 'sticker' && selected?.idx === idx
+          const size = stickerData.size || 72
           return (
-            <button
-              key={i}
-              onClick={() => setEditingSlot(i)}
-              title={sticker ? `Change sticker (${sticker.label})` : 'Add a sticker'}
+            <div
+              key={idx}
               style={{
                 position: 'absolute',
-                ...pos,
-                background: 'none',
-                border: sticker ? 'none' : `2px dashed ${child.theme.accent}`,
-                borderRadius: '50%',
-                width: sticker ? size + 16 : 52,
-                height: sticker ? size + 16 : 52,
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 3,
-                transform: `rotate(${rotate}deg)`,
-                transition: 'transform 0.15s',
-                color: child.theme.accent,
+                left: `${stickerData.x}%`, top: `${stickerData.y}%`,
+                transform: `translate(-50%, -50%) rotate(${stickerData.rotate || 0}deg)`,
+                width: size + 24, height: size + 24,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: isSel ? 10 : 3,
+                cursor: dragState?.idx === idx && dragState?.type === 'sticker' ? 'grabbing' : 'grab',
+                touchAction: 'none',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = `rotate(${rotate}deg) scale(1.1)` }}
-              onMouseLeave={e => { e.currentTarget.style.transform = `rotate(${rotate}deg)` }}
+              onPointerDown={e => { setSelected({ type: 'sticker', idx }); startDrag(e, 'sticker', idx, 'move') }}
+              onClick={e => e.stopPropagation()}
             >
-              {sticker ? (
-                <div style={{ filter: 'drop-shadow(0 5px 10px rgba(58,51,64,0.22))' }}>
-                  {sticker.image ? (
-                    <img
-                      src={CUSTOM_STICKER_IMAGES[sticker.id]}
-                      alt={sticker.label}
-                      style={{ width: size * 0.85, height: size * 0.85, objectFit: 'contain', display: 'block' }}
-                    />
-                  ) : (
-                    <span style={{
-                      fontSize: size * 0.68,
-                      lineHeight: 1,
-                      display: 'block',
-                      textShadow: [
-                        '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
-                        '-5px 0 0 #fff',    '5px 0 0 #fff',    '0 -5px 0 #fff',   '0 5px 0 #fff',
-                        '-4px -3px 0 #fff', '4px -3px 0 #fff', '-3px -4px 0 #fff','3px -4px 0 #fff',
-                        '-4px 3px 0 #fff',  '4px 3px 0 #fff',  '-3px 4px 0 #fff', '3px 4px 0 #fff',
-                      ].join(', '),
-                    }}>{sticker.emoji}</span>
-                  )}
-                </div>
-              ) : (
-                <span style={{ fontSize: 18, opacity: 0.55 }}>+</span>
+              {isSel && (
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  border: '2px dashed #3a3340', opacity: 0.5,
+                }} />
               )}
-            </button>
+              <div style={{ filter: 'drop-shadow(0 5px 10px rgba(58,51,64,0.22))' }}>
+                {def.image ? (
+                  <img src={CUSTOM_STICKER_IMAGES[def.id]} alt={def.label} draggable={false}
+                    style={{ width: size * 0.85, height: size * 0.85, objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <span style={{ fontSize: size * 0.68, lineHeight: 1, display: 'block', textShadow: WHITE_OUTLINE }}>
+                    {def.emoji}
+                  </span>
+                )}
+              </div>
+              {isSel && (
+                <>
+                  <DeleteBtn onDelete={deleteSelected} />
+                  <ResizeHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'sticker', idx, 'resize') }} />
+                  <RotateHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'sticker', idx, 'rotate') }} />
+                  <button
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={e => { e.stopPropagation(); setShowStickerPicker('change') }}
+                    style={{
+                      position: 'absolute', bottom: 1, left: 1,
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: child.theme.accent, color: '#fff',
+                      border: 'none', cursor: 'pointer', fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30,
+                    }}
+                  >✏️</button>
+                </>
+              )}
+            </div>
           )
         })}
 
+        {/* Add buttons */}
+        <div style={{
+          position: 'absolute', bottom: 12, right: 12,
+          display: 'flex', gap: 7, zIndex: 8,
+        }}>
+          <button
+            onClick={e => { e.stopPropagation(); addNote() }}
+            style={{
+              background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)',
+              border: 'none', borderRadius: 999,
+              padding: '7px 13px', fontSize: 12,
+              fontFamily: "'Space Mono', monospace",
+              color: '#6b5a3c', cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(58,51,64,.12)',
+            }}
+          >📝 Note</button>
+          <button
+            onClick={e => { e.stopPropagation(); setShowStickerPicker('add') }}
+            style={{
+              background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)',
+              border: 'none', borderRadius: 999,
+              padding: '7px 13px', fontSize: 12,
+              fontFamily: "'Space Mono', monospace",
+              color: child.theme.accent, cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(58,51,64,.12)',
+            }}
+          >⭐ Sticker</button>
+        </div>
+
         {/* Center identity */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <Avatar child={child} size={104} square />
+        <div style={{ position: 'relative', zIndex: 5, pointerEvents: 'none' }}>
+          <div style={{ pointerEvents: 'auto' }}>
+            <Avatar child={child} size={104} square />
+          </div>
           <h1 style={{
             fontFamily: "'DM Serif Display', serif",
-            fontSize: 46,
-            lineHeight: 1.1,
-            color: '#3a3340',
-            marginTop: 18,
+            fontSize: 46, lineHeight: 1.1, color: '#3a3340', marginTop: 18,
           }}>{child.name}</h1>
           <div style={{
             fontFamily: "'Roboto Mono', monospace",
-            fontSize: 18,
-            letterSpacing: '0.06em',
-            color: child.theme.targetColor,
-            marginTop: 10,
+            fontSize: 18, letterSpacing: '0.06em',
+            color: child.theme.targetColor, marginTop: 10,
           }}>{clock.date}</div>
           <div style={{
             fontFamily: "'Roboto Mono', monospace",
-            fontWeight: 700,
-            fontSize: 50,
-            color: '#3a3340',
-            marginTop: 2,
+            fontWeight: 700, fontSize: 50, color: '#3a3340', marginTop: 2,
           }}>{clock.time}</div>
           <div
             className={ticketPop ? 'ticket-pop' : ''}
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 9,
-              marginTop: 20,
-              background: '#fff',
-              color: child.theme.textMuted,
-              fontFamily: "'Space Mono', monospace",
-              fontWeight: 700,
-              fontSize: 17,
-              letterSpacing: '0.04em',
-              padding: '12px 24px',
-              borderRadius: 999,
+              display: 'inline-flex', alignItems: 'center', gap: 9, marginTop: 20,
+              background: '#fff', color: child.theme.textMuted,
+              fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 17,
+              letterSpacing: '0.04em', padding: '12px 24px', borderRadius: 999,
               boxShadow: `0 3px 12px ${child.theme.shadow}`,
             }}
           >🎟️ {state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
         </div>
       </div>
 
-      {/* Sticker picker */}
-      {editingSlot !== null && (
+      {/* Sticker picker sheet */}
+      {showStickerPicker && (
         <div
-          onClick={() => setEditingSlot(null)}
+          onClick={() => setShowStickerPicker(false)}
           style={{
             position: 'fixed', inset: 0,
             background: 'rgba(58,51,64,0.45)',
-            zIndex: 200,
-            display: 'flex',
-            alignItems: 'flex-end',
+            zIndex: 200, display: 'flex', alignItems: 'flex-end',
           }}
         >
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              width: '100%',
-              background: '#fff',
+              width: '100%', background: '#fff',
               borderRadius: '26px 26px 0 0',
               padding: '28px 28px 40px',
-              maxHeight: '72vh',
-              overflowY: 'auto',
+              maxHeight: '72vh', overflowY: 'auto',
             }}
           >
-            {/* Sheet handle */}
-            <div style={{
-              width: 40, height: 4, borderRadius: 999,
-              background: '#e0d4e8',
-              margin: '0 auto 22px',
-            }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: '#3a3340' }}>
-                Pick a sticker
-              </div>
-              {(state.headerStickers || [])[editingSlot] && (
-                <button
-                  onClick={() => {
-                    onUpdate(s => {
-                      const next = [...(s.headerStickers || [null, null, null, null])]
-                      next[editingSlot] = null
-                      return { ...s, headerStickers: next }
-                    })
-                    setEditingSlot(null)
-                  }}
-                  style={{
-                    background: '#fbeef0', color: '#b5546a',
-                    border: 'none', borderRadius: 999,
-                    padding: '7px 16px', fontSize: 13,
-                    cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
-                  }}
-                >Remove</button>
-              )}
+            <div style={{ width: 40, height: 4, borderRadius: 999, background: '#e0d4e8', margin: '0 auto 22px' }} />
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: '#3a3340', marginBottom: 20 }}>
+              {showStickerPicker === 'add' ? 'Add a sticker' : 'Change sticker'}
             </div>
-
             {STICKER_CATEGORIES.map(cat => (
               <div key={cat.id} style={{ marginBottom: 24 }}>
                 <div style={{
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: 11,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: child.theme.accent,
-                  marginBottom: 12,
+                  fontFamily: "'Space Mono', monospace", fontSize: 11,
+                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                  color: child.theme.accent, marginBottom: 12,
                 }}>{cat.label}</div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))',
-                  gap: 10,
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(68px, 1fr))', gap: 10 }}>
                   {STICKERS.filter(s => s.category === cat.id).map(sticker => {
-                    const isActive = (state.headerStickers || [])[editingSlot] === sticker.id
+                    const isActive = showStickerPicker === 'change' && selected?.type === 'sticker'
+                      && headerStickers[selected.idx]?.id === sticker.id
                     return (
                       <button
                         key={sticker.id}
                         onClick={() => {
-                          onUpdate(s => {
-                            const next = [...(s.headerStickers || [null, null, null, null])]
-                            next[editingSlot] = sticker.id
-                            return { ...s, headerStickers: next }
-                          })
-                          setEditingSlot(null)
+                          if (showStickerPicker === 'add') addSticker(sticker.id)
+                          else if (selected?.type === 'sticker') {
+                            updateStickerAt(selected.idx, { id: sticker.id })
+                            setShowStickerPicker(false)
+                          }
                         }}
                         style={{
-                          height: 68,
-                          borderRadius: 18,
+                          height: 68, borderRadius: 18,
                           background: isActive ? child.theme.bg : '#faf6fc',
                           border: `2px solid ${isActive ? child.theme.accent : 'transparent'}`,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 4,
-                          cursor: 'pointer',
+                          display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center',
+                          gap: 4, cursor: 'pointer', fontSize: 30,
                           transition: 'transform 0.12s',
-                          fontSize: 30,
                         }}
                         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)' }}
                         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
@@ -441,10 +606,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                           ? <img src={CUSTOM_STICKER_IMAGES[sticker.id]} alt={sticker.label} style={{ width: 26, height: 26, objectFit: 'contain', display: 'block' }} />
                           : sticker.emoji}
                         <span style={{
-                          fontFamily: "'Space Mono', monospace",
-                          fontSize: 8,
-                          color: isActive ? child.theme.accent : '#b3a9be',
-                          letterSpacing: '0.04em',
+                          fontFamily: "'Space Mono', monospace", fontSize: 8,
+                          color: isActive ? child.theme.accent : '#b3a9be', letterSpacing: '0.04em',
                         }}>{sticker.label.toUpperCase()}</span>
                       </button>
                     )

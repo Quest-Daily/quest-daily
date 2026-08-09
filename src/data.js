@@ -189,7 +189,12 @@ export function makeInitialChildState(childId) {
     shopItems: DEFAULT_SHOP_ITEMS[childId] || [],
     redemptions: [],
     suggestions: [],
-    headerStickers: [null, null, null, null],
+    headerStickers: [],
+    notePositions: [
+      { id: 'note-1', x: 8,  y: 42, scale: 1, rotate: -1.5, text: 'After school care today! 🎒', color: '#fae7c4' },
+      { id: 'note-2', x: 26, y: 12, scale: 1, rotate:  1.2, text: 'Swimming — pack your towel 🏊', color: '#fde8ef' },
+      { id: 'note-3', x: 90, y: 40, scale: 1, rotate: -0.8, text: "Grandma's here for dinner 💛", color: '#e7f0e4' },
+    ],
     disabledQuests: [],
   }
 }
@@ -206,7 +211,11 @@ export function createInitialState() {
       },
       streak: 5,
       weekDays: [true, true, true, true, true, false, false],
-      headerStickers: ['unicorn', 'heart', 'star', null],
+      headerStickers: [
+        { id: 'unicorn', x: 12, y: 22, size: 72, rotate: -12 },
+        { id: 'heart',   x: 87, y: 10, size: 68, rotate:   8 },
+        { id: 'star',    x: 30, y: 80, size: 60, rotate:   5 },
+      ],
     },
     hendrix: {
       ...makeInitialChildState('hendrix'),
@@ -214,11 +223,19 @@ export function createInitialState() {
       completed: { morning: ['make-bed'], afternoon: [], evening: [] },
       streak: 3,
       weekDays: [true, true, true, false, false, false, false],
-      headerStickers: ['rocket', 'soccer', 'dino', null],
+      headerStickers: [
+        { id: 'rocket', x: 12, y: 22, size: 72, rotate: -12 },
+        { id: 'soccer', x: 87, y: 10, size: 68, rotate:   8 },
+        { id: 'dino',   x: 30, y: 80, size: 60, rotate:   5 },
+      ],
     },
     felix: {
       ...makeInitialChildState('felix'),
-      headerStickers: ['bunny', 'rainbow', 'art', null],
+      headerStickers: [
+        { id: 'bunny',   x: 12, y: 22, size: 72, rotate: -12 },
+        { id: 'rainbow', x: 87, y: 10, size: 68, rotate:   8 },
+        { id: 'art',     x: 30, y: 80, size: 60, rotate:   5 },
+      ],
     },
   }
 }

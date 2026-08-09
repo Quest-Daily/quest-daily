@@ -26,7 +26,21 @@ export default function App() {
             parsed[id].suggestions = []
           }
           if (!parsed[id].disabledQuests) parsed[id].disabledQuests = []
-          if (!parsed[id].headerStickers) parsed[id].headerStickers = [null, null, null, null]
+          if (!parsed[id].notePositions) parsed[id].notePositions = initial[id].notePositions
+          // Migrate old headerStickers (string/null array) to object array
+          if (!parsed[id].headerStickers) {
+            parsed[id].headerStickers = []
+          } else if (parsed[id].headerStickers.some(s => s === null || typeof s === 'string')) {
+            const defaultPos = [
+              { x: 12, y: 22, size: 72, rotate: -12 },
+              { x: 87, y: 10, size: 68, rotate:   8 },
+              { x: 30, y: 80, size: 60, rotate:   5 },
+              { x: 94, y: 38, size: 70, rotate:  14 },
+            ]
+            parsed[id].headerStickers = parsed[id].headerStickers
+              .map((s, i) => typeof s === 'string' ? { id: s, ...defaultPos[i] } : null)
+              .filter(Boolean)
+          }
         })
         return parsed
       }
