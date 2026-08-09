@@ -22,6 +22,7 @@ function openReceipt(html) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Mono:wght@400;700&family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  @page { size: 72mm auto; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: fit-content; }
   body { font-family: 'Space Mono', monospace; font-size: 11px; width: 72mm; color: #000; padding: 2mm 4mm 5mm; }
