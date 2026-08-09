@@ -11,6 +11,8 @@ import '@fontsource/hanken-grotesk/600.css'
 import '@fontsource/hanken-grotesk/700.css'
 import '@fontsource/hanken-grotesk/800.css'
 import '@fontsource/patrick-hand/400.css'
+import '@fontsource/nunito/800.css'
+import '@fontsource/nunito/900.css'
 import './index.css'
 import App from './App.jsx'
 

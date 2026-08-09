@@ -726,7 +726,7 @@ function Stat({ label, value, icon, bg, color }) {
 function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue }) {
   const [showModal, setShowModal] = useState(false)
 
-  function handleAdd({ name, emoji, photo, ticketPrice, children }) {
+  function handleAdd({ name, emoji, photo, ticketPrice, children, category }) {
     children.forEach(childId => {
       onUpdate(childId, s => ({
         ...s,
@@ -736,6 +736,7 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
           title: name,
           ticketPrice,
           ...(photo ? { photo } : {}),
+          ...(category ? { category } : {}),
         }],
       }))
     })
@@ -895,6 +896,7 @@ function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
   const [preview, setPreview] = useState(null)
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('🎁')
+  const [category, setCategory] = useState('')
   const [detectedPrice, setDetectedPrice] = useState(null)
   const [ticketPrice, setTicketPrice] = useState(20)
   const [selectedKids, setSelectedKids] = useState([...CHILD_ORDER])
@@ -947,7 +949,7 @@ function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
 
   function handleAdd() {
     if (!name.trim() || selectedKids.length === 0) return
-    onAdd({ name: name.trim(), emoji, photo: preview, ticketPrice: Math.max(1, ticketPrice), children: selectedKids })
+    onAdd({ name: name.trim(), emoji, photo: preview, ticketPrice: Math.max(1, ticketPrice), children: selectedKids, category: category.trim() || undefined })
   }
 
   const canSubmit = name.trim().length > 0 && selectedKids.length > 0
@@ -1073,6 +1075,36 @@ function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
                 placeholder="Product name"
                 autoFocus
                 style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+
+            {/* Category */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{
+                fontFamily: "'Space Mono', monospace", fontSize: 11,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: '#9a8fa6', marginBottom: 8,
+              }}>Category (optional)</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                {['Gaming', 'Toys', 'Clothes', 'Food', 'Activities', 'Money'].map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(category === c.toLowerCase() ? '' : c.toLowerCase())}
+                    style={{
+                      background: category === c.toLowerCase() ? '#efe2f5' : '#f5f0f9',
+                      color: category === c.toLowerCase() ? '#a8689a' : '#9a8fa6',
+                      border: `1.5px solid ${category === c.toLowerCase() ? '#d3bce6' : 'transparent'}`,
+                      borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
+                    }}
+                  >{c}</button>
+                ))}
+              </div>
+              <input
+                value={category}
+                onChange={e => setCategory(e.target.value.toLowerCase())}
+                placeholder="or type a custom category..."
+                style={{ ...inputStyle, fontSize: 13 }}
               />
             </div>
 
