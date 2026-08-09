@@ -10,8 +10,8 @@ const LOGO_SVG = `<svg width="32" height="32" viewBox="0 0 100 100" xmlns="http:
 
 function nowDateTime() {
   const d = new Date()
-  const date = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()
-  const time = d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()
+  const date = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+  const time = d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: true })
   return `${date} · ${time}`
 }
 
@@ -34,7 +34,9 @@ function openReceipt(html) {
   .gap-sm { height: 2px; }
   .solid  { border: none; border-top: 1.5px solid #000; margin: 6px 0; }
   .dash   { border: none; border-top: 1px dashed #999; margin: 5px 0; }
-  .row    { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0; }
+  .split  { display: flex; align-items: stretch; }
+  .split-col { flex: 1; text-align: center; padding: 3px 6px; }
+  .divider { width: 1px; background: #ccc; margin: 2px 0; }
 </style>
 </head><body>${html}
 <script>
@@ -49,25 +51,28 @@ document.fonts.ready.then(function() {
 
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
-    <div class="c serif" style="font-size:22px">Quest Daily</div>
+    <hr class="solid" style="margin-top:0">
+    <div class="c" style="margin: 4px 0 2px">${LOGO_SVG}</div>
+    <div class="c serif" style="font-size:15px; letter-spacing:0.03em">Quest Daily</div>
+    <div class="c b xs" style="letter-spacing:0.16em; margin-top:2px">QUEST COMPLETE</div>
     <hr class="solid">
-    <div class="xs muted" style="letter-spacing:0.06em">${nowDateTime()}</div>
-    <div class="gap-sm"></div>
-    <div class="serif b" style="font-size:26px; line-height:1.1">${childName}</div>
-    <div class="gap-sm"></div>
-    <div><span class="b">&#x2726; Quest complete:</span> ${questTitle}</div>
+    <div class="c serif" style="font-size:17px; margin-bottom:1px">${childName}</div>
+    <div class="c muted" style="font-size:10px">${questTitle}</div>
+    <div class="c xs muted" style="margin-top:2px">${nowDateTime()}</div>
+    <div class="gap"></div>
     <hr class="dash">
-    <div class="row">
-      <span class="xs b" style="letter-spacing:0.12em">TICKETS EARNED</span>
-      <span class="serif b" style="font-size:20px; line-height:1">${ticketsEarned}</span>
-    </div>
-    <div class="row">
-      <span class="xs b" style="letter-spacing:0.12em">BANK TOTAL</span>
-      <span class="serif b" style="font-size:20px; line-height:1">${totalTickets}</span>
+    <div class="split" style="padding: 4px 0">
+      <div class="split-col">
+        <div class="xs muted" style="margin-bottom:4px">tickets earned<br>for quest</div>
+        <div class="b" style="font-size:11px">${ticketsEarned}</div>
+      </div>
+      <div class="divider"></div>
+      <div class="split-col">
+        <div class="xs muted" style="margin-bottom:4px">total tickets<br>in the bank</div>
+        <div class="b" style="font-size:11px">${totalTickets}</div>
+      </div>
     </div>
     <hr class="dash">
-    <div class="c xs b" style="letter-spacing:0.16em; margin: 5px 0 4px">NICE WORK, ${childName.toUpperCase()}!</div>
-    <div class="c">${LOGO_SVG}</div>
     ${sectionDone ? `<div class="gap-sm"></div><div class="c xs b" style="letter-spacing:0.12em">&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;</div>` : ''}
   `)
 }
@@ -76,26 +81,28 @@ export function printSectionDone() {}
 
 export function printRedemption({ childName, itemTitle, ticketPrice, remainingTickets }) {
   openReceipt(`
-    <div class="c serif" style="font-size:22px">Quest Daily</div>
-    <div class="c xs b" style="letter-spacing:0.18em; margin-top:3px">REWARD REDEEMED</div>
+    <hr class="solid" style="margin-top:0">
+    <div class="c" style="margin: 4px 0 2px">${LOGO_SVG}</div>
+    <div class="c serif" style="font-size:15px; letter-spacing:0.03em">Quest Daily</div>
+    <div class="c b xs" style="letter-spacing:0.16em; margin-top:2px">REWARD REDEEMED</div>
     <hr class="solid">
-    <div class="xs muted" style="letter-spacing:0.06em">${nowDateTime()}</div>
-    <div class="gap-sm"></div>
-    <div class="serif b" style="font-size:26px; line-height:1.1">${childName}</div>
-    <div class="gap-sm"></div>
-    <div><span class="b">&#x2726; Reward:</span> ${itemTitle}</div>
+    <div class="c serif" style="font-size:17px; margin-bottom:1px">${childName}</div>
+    <div class="c muted" style="font-size:10px">${itemTitle}</div>
+    <div class="c xs muted" style="margin-top:2px">${nowDateTime()}</div>
+    <div class="gap"></div>
     <hr class="dash">
-    <div class="row">
-      <span class="xs b" style="letter-spacing:0.12em">TICKETS SPENT</span>
-      <span class="serif b" style="font-size:20px; line-height:1">${ticketPrice}</span>
-    </div>
-    <div class="row">
-      <span class="xs b" style="letter-spacing:0.12em">BANK TOTAL</span>
-      <span class="serif b" style="font-size:20px; line-height:1">${remainingTickets}</span>
+    <div class="split" style="padding: 4px 0">
+      <div class="split-col">
+        <div class="xs muted" style="margin-bottom:4px">tickets spent<br>for reward</div>
+        <div class="b" style="font-size:11px">${ticketPrice}</div>
+      </div>
+      <div class="divider"></div>
+      <div class="split-col">
+        <div class="xs muted" style="margin-bottom:4px">total tickets<br>in the bank</div>
+        <div class="b" style="font-size:11px">${remainingTickets}</div>
+      </div>
     </div>
     <hr class="dash">
-    <div class="c xs b" style="letter-spacing:0.16em; margin: 5px 0 4px">ENJOY, ${childName.toUpperCase()}!</div>
-    <div class="c">${LOGO_SVG}</div>
   `)
 }
 
