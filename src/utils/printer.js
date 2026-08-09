@@ -50,7 +50,6 @@ document.fonts.ready.then(function() {
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
     <div class="c serif" style="font-size:22px">Quest Daily</div>
-    <div class="c xs b" style="letter-spacing:0.18em; margin-top:3px">QUEST COMPLETE</div>
     <hr class="solid">
     <div class="xs muted" style="letter-spacing:0.06em">${nowDateTime()}</div>
     <div class="gap-sm"></div>
