@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CHILDREN, CHILD_ORDER, QUESTS, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
 import { useLocalStorage } from '../hooks'
@@ -312,14 +313,38 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
   )
 }
 
+function compressImage(dataUrl, maxPx = 480) {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      const ratio = Math.min(maxPx / img.width, maxPx / img.height, 1)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * ratio)
+      canvas.height = Math.round(img.height * ratio)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.src = dataUrl
+  })
+}
+
 function PhotoCard({ child }) {
   const [photo, setPhoto] = useLocalStorage(`photo_${child.id}`, null)
+  const [error, setError] = useState(null)
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    setError(null)
     const reader = new FileReader()
-    reader.onload = ev => setPhoto(ev.target.result)
+    reader.onload = async ev => {
+      const compressed = await compressImage(ev.target.result)
+      try {
+        setPhoto(compressed)
+      } catch {
+        setError('Photo too large to save — try a smaller image.')
+      }
+    }
     reader.readAsDataURL(file)
     e.target.value = ''
   }
@@ -375,6 +400,13 @@ function PhotoCard({ child }) {
           }}>Remove</button>
         )}
       </div>
+      {error && (
+        <div style={{
+          marginTop: 10, fontSize: 12,
+          color: '#b5546a', fontFamily: "'Hanken Grotesk', sans-serif",
+          lineHeight: 1.4,
+        }}>{error}</div>
+      )}
     </div>
   )
 }
