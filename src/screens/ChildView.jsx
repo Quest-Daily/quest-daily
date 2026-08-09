@@ -133,7 +133,10 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
     }
   }
 
-  function onHeaderPointerUp() { setDragState(null) }
+  function onHeaderPointerUp() {
+    setDragState(null)
+    setTimeout(() => { movedRef.current = false }, 80)
+  }
 
   function handleBoardClick() { if (!movedRef.current) setSelected(null) }
 
