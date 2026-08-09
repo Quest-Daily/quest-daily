@@ -1,4 +1,4 @@
-const LOGO_SVG = `<svg width="18" height="18" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+const LOGO_SVG = `<svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
   <g transform="rotate(15,50,50)">
     <polygon points="50,12 47.5,16.5 44,63 56,63 52.5,16.5" fill="#3a1860"/>
     <rect x="29" y="63" width="42" height="8.5" rx="4.25" fill="#c090e8"/>
@@ -24,17 +24,17 @@ function openReceipt(html) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: fit-content; }
-  body { font-family: 'Space Mono', monospace; font-size: 11px; width: 72mm; color: #000; padding: 5mm 4mm 6mm; }
+  body { font-family: 'Space Mono', monospace; font-size: 11px; width: 72mm; color: #000; padding: 2mm 4mm 4mm; }
   .c     { text-align: center; }
   .b     { font-weight: 700; }
   .serif { font-family: 'DM Serif Display', serif; }
   .muted { color: #555; }
   .xs    { font-size: 9px; }
-  .gap    { height: 7px; }
-  .gap-sm { height: 3px; }
-  .solid  { border: none; border-top: 1.5px solid #000; margin: 8px 0; }
-  .dash   { border: none; border-top: 1px dashed #999; margin: 6px 0; }
-  .row    { display: flex; justify-content: space-between; align-items: baseline; margin: 5px 0; }
+  .gap    { height: 5px; }
+  .gap-sm { height: 2px; }
+  .solid  { border: none; border-top: 1.5px solid #000; margin: 6px 0; }
+  .dash   { border: none; border-top: 1px dashed #999; margin: 5px 0; }
+  .row    { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0; }
 </style>
 </head><body>${html}
 <script>
