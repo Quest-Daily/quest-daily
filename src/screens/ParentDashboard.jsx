@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { CHILDREN, CHILD_ORDER, QUESTS, DEFAULT_SHOP_ITEMS } from '../data'
+import { CHILDREN, CHILD_ORDER, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
 import { useLocalStorage } from '../hooks'
 
-export default function ParentDashboard({ childState, onUpdate, onBack, onResetState }) {
-  const allQuests = Object.values(QUESTS).flat()
+export default function ParentDashboard({ childState, quests, onUpdateQuests, onUpdate, onBack, onResetState }) {
+  const allQuests = Object.values(quests).flat()
 
   function handleSuggestion(childId, suggestionId, action) {
     onUpdate(childId, s => {
@@ -132,8 +132,9 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
               {/* Quest completion breakdown */}
               <div style={{ marginTop: 18 }}>
                 {['morning', 'afternoon', 'evening'].map(part => {
-                  const quests = QUESTS[part]
-                  const done = state.completed[part].length
+                  const disabled = state.disabledQuests || []
+                  const partQuests = (quests[part] || []).filter(q => !disabled.includes(q.id))
+                  const done = state.completed[part].filter(id => partQuests.some(q => q.id === id)).length
                   return (
                     <div key={part} style={{ marginBottom: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -141,12 +142,12 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
                           {part === 'morning' ? '☀️' : part === 'afternoon' ? '🌤️' : '🌙'} {part}
                         </span>
                         <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#9a8fa6' }}>
-                          {done}/{quests.length}
+                          {done}/{partQuests.length}
                         </span>
                       </div>
                       <div style={{ height: 6, background: '#f0e8e0', borderRadius: 999, overflow: 'hidden' }}>
                         <div style={{
-                          width: `${quests.length ? (done / quests.length) * 100 : 0}%`,
+                          width: `${partQuests.length ? (done / partQuests.length) * 100 : 0}%`,
                           height: '100%',
                           background: child.theme.accent,
                           borderRadius: 999,
@@ -258,6 +259,15 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
         </div>
       )}
 
+      {/* Manage quests */}
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, marginBottom: 20 }}>Manage quests</h2>
+      <ManageQuestsPanel
+        quests={quests}
+        onUpdateQuests={onUpdateQuests}
+        childState={childState}
+        onUpdate={onUpdate}
+      />
+
       {/* Coming soon notice */}
       <div style={{
         background: '#fff',
@@ -265,17 +275,16 @@ export default function ParentDashboard({ childState, onUpdate, onBack, onResetS
         padding: '32px 36px',
         boxShadow: '0 3px 14px rgba(58,51,64,.06)',
         marginBottom: 24,
+        marginTop: 40,
       }}>
         <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 10 }}>
           🚧 Coming next
         </h3>
         <p style={{ color: '#6f6675', lineHeight: 1.6, marginBottom: 16 }}>
-          The parent dashboard is designed at spec level — the full build will include:
-          manage quests &amp; ticket values, write noticeboard notes, approve reward suggestions,
-          manage each child's shopfront, run Payday, and review history &amp; mood logs.
+          More parent tools on the way — write noticeboard notes, manage each child's shopfront, run Payday, and review history &amp; mood logs.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {['Manage quests', 'Noticeboard', 'Shop catalogue', 'Payday', 'Mood log', 'History'].map(item => (
+          {['Noticeboard', 'Shop catalogue', 'Payday', 'Mood log', 'History'].map(item => (
             <span key={item} style={{
               background: '#efe2f5',
               color: '#8a5a8a',
@@ -408,6 +417,259 @@ function PhotoCard({ child }) {
         }}>{error}</div>
       )}
     </div>
+  )
+}
+
+function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
+  const [editingId, setEditingId] = useState(null)
+  const [addingSection, setAddingSection] = useState(null)
+
+  const SECTIONS = [
+    { key: 'morning',   label: 'Morning',   emoji: '☀️' },
+    { key: 'afternoon', label: 'Afternoon', emoji: '🌤️' },
+    { key: 'evening',   label: 'Evening',   emoji: '🌙' },
+  ]
+
+  function saveQuest(section, questId, updates) {
+    onUpdateQuests(prev => ({
+      ...prev,
+      [section]: prev[section].map(q => q.id === questId ? { ...q, ...updates } : q),
+    }))
+    setEditingId(null)
+  }
+
+  function deleteQuest(section, questId) {
+    if (!window.confirm('Remove this quest for everyone?')) return
+    onUpdateQuests(prev => ({
+      ...prev,
+      [section]: prev[section].filter(q => q.id !== questId),
+    }))
+  }
+
+  function addQuest(section, { icon, title, tickets }) {
+    onUpdateQuests(prev => ({
+      ...prev,
+      [section]: [...prev[section], { id: `q-${Date.now()}`, icon, title, tickets }],
+    }))
+    setAddingSection(null)
+  }
+
+  function toggleChild(childId, questId, currentlyEnabled) {
+    onUpdate(childId, s => {
+      const disabled = s.disabledQuests || []
+      return {
+        ...s,
+        disabledQuests: currentlyEnabled
+          ? [...disabled, questId]
+          : disabled.filter(id => id !== questId),
+      }
+    })
+  }
+
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 22,
+      padding: '28px 32px',
+      boxShadow: '0 3px 14px rgba(58,51,64,.06)',
+      marginBottom: 0,
+    }}>
+      {SECTIONS.map(({ key, label, emoji }, si) => (
+        <div key={key} style={{ marginBottom: si < 2 ? 32 : 0 }}>
+          {/* Section header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 11,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: '#9a8fa6',
+            }}>{emoji} {label}</div>
+            <button
+              onClick={() => { setAddingSection(key); setEditingId(null) }}
+              style={{
+                background: 'none',
+                border: '1.5px solid #e0d4e8',
+                color: '#a8689a',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                padding: '5px 13px',
+                borderRadius: 999,
+                cursor: 'pointer',
+              }}>+ Add quest</button>
+          </div>
+
+          {/* Quest rows */}
+          {(quests[key] || []).map(quest => (
+            <div key={quest.id}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '11px 0',
+                borderBottom: '1px solid #f4eef7',
+              }}>
+                <span style={{ fontSize: 20, width: 26, textAlign: 'center', flexShrink: 0 }}>{quest.icon}</span>
+                <span style={{ flex: 1, fontSize: 14, color: '#3a3340' }}>{quest.title}</span>
+                <span style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 11,
+                  color: '#9a8fa6',
+                  background: '#f6f0f9',
+                  padding: '3px 9px',
+                  borderRadius: 999,
+                  flexShrink: 0,
+                }}>{quest.tickets}🎟️</span>
+
+                {/* Per-child toggles */}
+                {CHILD_ORDER.map(childId => {
+                  const disabled = childState[childId]?.disabledQuests || []
+                  const enabled = !disabled.includes(quest.id)
+                  return (
+                    <button
+                      key={childId}
+                      onClick={() => toggleChild(childId, quest.id, enabled)}
+                      title={`${enabled ? 'Disable' : 'Enable'} for ${CHILDREN[childId].name}`}
+                      style={{
+                        width: 28, height: 28,
+                        borderRadius: '50%',
+                        background: enabled ? CHILDREN[childId].theme.accent : '#ece6f0',
+                        color: enabled ? '#fff' : '#b3a9be',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: "'DM Serif Display', serif",
+                        fontSize: 13,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                        transition: 'background 0.2s',
+                      }}
+                    >{CHILDREN[childId].name[0]}</button>
+                  )
+                })}
+
+                <button
+                  onClick={() => { setEditingId(editingId === quest.id ? null : quest.id); setAddingSection(null) }}
+                  style={{
+                    background: editingId === quest.id ? '#efe2f5' : 'none',
+                    border: 'none', borderRadius: 8,
+                    padding: '4px 8px', cursor: 'pointer', fontSize: 14, flexShrink: 0,
+                  }}>✏️</button>
+                <button
+                  onClick={() => deleteQuest(key, quest.id)}
+                  style={{
+                    background: 'none', border: 'none', borderRadius: 8,
+                    padding: '4px 8px', cursor: 'pointer', fontSize: 13,
+                    color: '#c9a0a0', flexShrink: 0,
+                  }}>✕</button>
+              </div>
+
+              {editingId === quest.id && (
+                <QuestForm
+                  initial={quest}
+                  onSave={updates => saveQuest(key, quest.id, updates)}
+                  onCancel={() => setEditingId(null)}
+                />
+              )}
+            </div>
+          ))}
+
+          {addingSection === key && (
+            <QuestForm
+              initial={{ icon: '⭐', title: '', tickets: 2 }}
+              isNew
+              onSave={q => addQuest(key, q)}
+              onCancel={() => setAddingSection(null)}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function QuestForm({ initial, onSave, onCancel, isNew }) {
+  const [icon, setIcon] = useState(initial.icon)
+  const [title, setTitle] = useState(initial.title)
+  const [tickets, setTickets] = useState(initial.tickets)
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!title.trim()) return
+    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)) })
+  }
+
+  const inputStyle = {
+    border: '1.5px solid #e0d4e8',
+    borderRadius: 10,
+    padding: '9px 12px',
+    fontSize: 14,
+    fontFamily: "'Hanken Grotesk', sans-serif",
+    background: '#fff',
+    color: '#3a3340',
+    outline: 'none',
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        background: '#faf6fc',
+        borderRadius: 14,
+        padding: '16px 18px',
+        margin: '8px 0',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 10,
+        alignItems: 'center',
+      }}
+    >
+      <input
+        value={icon}
+        onChange={e => setIcon(e.target.value)}
+        placeholder="⭐"
+        maxLength={2}
+        style={{ ...inputStyle, width: 52, textAlign: 'center', fontSize: 22, padding: '7px 6px' }}
+      />
+      <input
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="Quest name"
+        autoFocus
+        style={{ ...inputStyle, flex: 1, minWidth: 160 }}
+      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        <input
+          type="number"
+          value={tickets}
+          onChange={e => setTickets(Number(e.target.value))}
+          min={1} max={10}
+          style={{ ...inputStyle, width: 54, textAlign: 'center' }}
+        />
+        <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>tickets</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          type="submit"
+          style={{
+            background: '#a8689a', color: '#fff',
+            border: 'none', borderRadius: 999,
+            padding: '9px 20px', fontSize: 13, fontWeight: 600,
+            cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
+          }}
+        >{isNew ? 'Add quest' : 'Save'}</button>
+        <button
+          type="button"
+          onClick={onCancel}
+          style={{
+            background: '#ece6f0', color: '#6f6675',
+            border: 'none', borderRadius: 999,
+            padding: '9px 16px', fontSize: 13,
+            cursor: 'pointer', fontFamily: "'Hanken Grotesk', sans-serif",
+          }}
+        >Cancel</button>
+      </div>
+    </form>
   )
 }
 

@@ -171,6 +171,7 @@ export function makeInitialChildState(childId) {
     redemptions: [],
     suggestions: [],
     headerStickers: [null, null, null, null],
+    disabledQuests: [],
   }
 }
 

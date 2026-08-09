@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CHILDREN, QUESTS, SIDE_QUESTS, NOTICES, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
+import { CHILDREN, SIDE_QUESTS, NOTICES, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
@@ -8,7 +8,7 @@ import { printQuestComplete, printQuestSheet } from '../utils/printer'
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
 
-export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop, onSuggestReward }) {
+export default function ChildView({ childId, state, quests, onUpdate, onBack, onOpenShop, onSuggestReward }) {
   const child = CHILDREN[childId]
   const clock = useClock()
   const [activeTab, setActiveTab] = useState('morning')
@@ -20,14 +20,19 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     setTimeout(() => setTicketPop(false), 450)
   }
 
+  function enabledQuests(part) {
+    const disabled = state.disabledQuests || []
+    return (quests[part] || []).filter(q => !disabled.includes(q.id))
+  }
+
   function toggleQuest(dayPart, questId) {
-    const quest = QUESTS[dayPart].find(q => q.id === questId)
+    const quest = (quests[dayPart] || []).find(q => q.id === questId)
     if (!quest) return
     const isDone = state.completed[dayPart].includes(questId)
     if (!isDone) {
       const newTickets = state.tickets + quest.tickets
       const newCompleted = [...state.completed[dayPart], questId]
-      const sectionDone = newCompleted.length === QUESTS[dayPart].length
+      const sectionDone = newCompleted.length === enabledQuests(dayPart).length
       printQuestComplete({
         childName: child.name,
         questTitle: quest.title,
@@ -86,7 +91,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
   function printSection(part) {
     printQuestSheet({
       childName: child.name,
-      sections: [{ label: DAY_PART_LABELS[part], quests: QUESTS[part] }],
+      sections: [{ label: DAY_PART_LABELS[part], quests: enabledQuests(part) }],
       allDay: false,
     })
   }
@@ -94,7 +99,7 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
   function printAllDay() {
     printQuestSheet({
       childName: child.name,
-      sections: DAY_PARTS.map(part => ({ label: DAY_PART_LABELS[part], quests: QUESTS[part] })),
+      sections: DAY_PARTS.map(part => ({ label: DAY_PART_LABELS[part], quests: enabledQuests(part) })),
       allDay: true,
     })
   }
@@ -116,8 +121,8 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
     popTickets()
   }
 
-  const currentQuests = QUESTS[activeTab]
-  const doneCurrent = state.completed[activeTab].length
+  const currentQuests = enabledQuests(activeTab)
+  const doneCurrent = state.completed[activeTab].filter(id => currentQuests.some(q => q.id === id)).length
   const totalCurrent = currentQuests.length
   const progressPct = totalCurrent ? (doneCurrent / totalCurrent) * 100 : 0
 

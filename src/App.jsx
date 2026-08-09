@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createInitialState } from './data'
+import { createInitialState, QUESTS } from './data'
 import SignIn from './screens/SignIn'
 import ParentPin from './screens/ParentPin'
 import FamilyHome from './screens/FamilyHome'
@@ -11,19 +11,22 @@ import ParentDashboard from './screens/ParentDashboard'
 export default function App() {
   const [screen, setScreen] = useState('signin')
   const [currentChild, setCurrentChild] = useState(null)
+
   const [childState, setChildState] = useState(() => {
     try {
       const saved = localStorage.getItem('quest-daily-state')
       if (saved) {
         const parsed = JSON.parse(saved)
-        // Migrate old saves: add missing shop fields if absent
         const initial = createInitialState()
         Object.keys(initial).forEach(id => {
-          if (parsed[id] && !parsed[id].shopItems) {
+          if (!parsed[id]) return
+          if (!parsed[id].shopItems) {
             parsed[id].shopItems = initial[id].shopItems
             parsed[id].redemptions = []
             parsed[id].suggestions = []
           }
+          if (!parsed[id].disabledQuests) parsed[id].disabledQuests = []
+          if (!parsed[id].headerStickers) parsed[id].headerStickers = [null, null, null, null]
         })
         return parsed
       }
@@ -31,9 +34,21 @@ export default function App() {
     return createInitialState()
   })
 
+  const [quests, setQuests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('quest-daily-quests')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return QUESTS
+  })
+
   useEffect(() => {
     localStorage.setItem('quest-daily-state', JSON.stringify(childState))
   }, [childState])
+
+  useEffect(() => {
+    localStorage.setItem('quest-daily-quests', JSON.stringify(quests))
+  }, [quests])
 
   function updateChild(id, updater) {
     setChildState(prev => ({ ...prev, [id]: updater(prev[id]) }))
@@ -76,6 +91,7 @@ export default function App() {
       <ChildView
         childId={currentChild}
         state={childState[currentChild]}
+        quests={quests}
         onUpdate={updater => updateChild(currentChild, updater)}
         onBack={() => setScreen('family-home')}
         onOpenShop={() => setScreen('shop')}
@@ -111,10 +127,13 @@ export default function App() {
     return (
       <ParentDashboard
         childState={childState}
+        quests={quests}
+        onUpdateQuests={setQuests}
         onUpdate={updateChild}
         onBack={() => setScreen('family-home')}
         onResetState={() => {
           setChildState(createInitialState())
+          setQuests(QUESTS)
           setScreen('family-home')
         }}
       />
