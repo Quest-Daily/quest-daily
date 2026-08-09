@@ -65,9 +65,8 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
       <span class="serif b" style="font-size:18px; line-height:1">${totalTickets}</span>
     </div>
     <hr class="dash">
-    <div class="c xs b" style="letter-spacing:0.16em; margin: 6px 0 4px">NICE WORK, ${childName.toUpperCase()}!</div>
+    <div class="c xs b" style="letter-spacing:0.16em; margin: 6px 0 4px">${sectionDone ? `&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;` : `NICE WORK, ${childName.toUpperCase()}!`}</div>
     <div class="c">${LOGO_SVG}</div>
-    ${sectionDone ? `<div class="c xs b" style="letter-spacing:0.12em; margin-top:5px">&#x2605; ALL ${section.toUpperCase()} QUESTS DONE! &#x2605;</div>` : ''}
   `)
 }
 
