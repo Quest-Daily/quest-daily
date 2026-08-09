@@ -47,13 +47,15 @@ document.fonts.ready.then(function() {
   win.document.close()
 }
 
-const SECTION_ICONS = { morning: '🌅', afternoon: '☀️', evening: '🌙' }
+const SECTION_SVGS = {
+  morning: `<svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs><mask id="moon-mask"><rect width="100" height="100" fill="white"/><circle cx="42" cy="44" r="32" fill="black"/></mask><mask id="outer-mask"><circle cx="58" cy="57" r="34" fill="white"/></mask></defs><circle cx="58" cy="57" r="34" fill="none" stroke="#000" stroke-width="5" mask="url(#moon-mask)"/><circle cx="42" cy="44" r="32" fill="none" stroke="#000" stroke-width="5" mask="url(#outer-mask)"/><path d="M23,26 L26,33 L33,36 L26,39 L23,46 L20,39 L13,36 L20,33 Z" fill="#000"/><circle cx="11" cy="16" r="3.5" fill="none" stroke="#000" stroke-width="3"/><circle cx="25" cy="7" r="2.5" fill="none" stroke="#000" stroke-width="2.5"/></svg>`,
+}
 
 export function printQuestComplete({ childName, questTitle, ticketsEarned, totalTickets, sectionDone, section }) {
   openReceipt(`
-    <div class="c serif" style="font-size:26px; margin-bottom:1px">Quest Daily</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:1px">${section ? SECTION_SVGS[section] : ''}<span class="serif" style="font-size:26px">Quest Daily</span></div>
     <hr class="solid">
-    <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}${section ? ` · ${SECTION_ICONS[section]}` : ''}</div>
+    <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}</div>
     <div class="gap-sm"></div>
     <div class="serif b" style="font-size:22px; line-height:1.1">${childName}</div>
     <div class="sans" style="margin-top:2px"><span class="b">&#x2726; Quest complete:</span> ${questTitle}</div>

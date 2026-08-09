@@ -33,7 +33,11 @@ export function useLocalStorage(key, initial) {
   })
 
   useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(val))
+    try {
+      localStorage.setItem(key, JSON.stringify(val))
+    } catch {
+      console.warn('localStorage write failed — storage may be full')
+    }
   }, [key, val])
 
   return [val, setVal]
