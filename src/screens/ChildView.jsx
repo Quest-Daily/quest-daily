@@ -174,105 +174,94 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
         }}
       >PRINT ALL<br/>DAILY QUESTS</button>
 
-      {/* Identity header */}
+      {/* Identity header — doubles as noticeboard */}
       <div style={{
         background: child.theme.bg,
-        padding: '60px 48px 40px',
+        position: 'relative',
+        padding: '70px 0 50px',
         textAlign: 'center',
+        overflow: 'hidden',
       }}>
-        <Avatar child={child} size={104} square />
-        <h1 style={{
-          fontFamily: "'DM Serif Display', serif",
-          fontSize: 46,
-          lineHeight: 1.1,
-          color: '#3a3340',
-          marginTop: 18,
-        }}>{child.name}</h1>
-        <div style={{
-          fontFamily: "'Roboto Mono', monospace",
-          fontSize: 18,
-          letterSpacing: '0.06em',
-          color: child.theme.targetColor,
-          marginTop: 10,
-        }}>{clock.date}</div>
-        <div style={{
-          fontFamily: "'Roboto Mono', monospace",
-          fontWeight: 700,
-          fontSize: 50,
-          color: '#3a3340',
-          marginTop: 2,
-        }}>{clock.time}</div>
-        <div
-          className={ticketPop ? 'ticket-pop' : ''}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 9,
-            marginTop: 20,
-            background: '#fff',
-            color: child.theme.textMuted,
-            fontFamily: "'Space Mono', monospace",
-            fontWeight: 700,
-            fontSize: 17,
-            letterSpacing: '0.04em',
-            padding: '12px 24px',
-            borderRadius: 999,
-            boxShadow: `0 3px 12px ${child.theme.shadow}`,
-          }}
-        >🎟️ {state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
-      </div>
-
-      {/* Noticeboard */}
-      <div style={{ padding: '40px 44px 12px' }}>
-        <div style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: 12,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: child.theme.accent,
-          marginBottom: 26,
-        }}>Today · {clock.date}</div>
-        <div style={{
-          display: 'flex',
-          gap: 28,
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          alignItems: 'flex-start',
-        }}>
-          {NOTICES.map(note => (
-            <div
-              key={note.id}
-              style={{
-                position: 'relative',
-                width: 'clamp(160px, 22vw, 216px)',
-                minHeight: 200,
-                background: '#fae7c4',
-                borderRadius: 3,
-                padding: '32px 20px 22px',
-                boxShadow: '0 6px 14px rgba(58,51,64,.1)',
-                transform: `rotate(${note.rotation}deg)`,
-              }}
-            >
-              {/* Washi tape strip */}
+        {/* Sticky notes scattered around identity */}
+        {NOTICES.map((note, i) => {
+          const positions = [
+            { left: '4%',  top: 95  },
+            { left: '21%', top: 22  },
+            { right: '4%', top: 100 },
+          ]
+          const pos = positions[i] || positions[0]
+          return (
+            <div key={note.id} style={{
+              position: 'absolute',
+              ...pos,
+              width: 'clamp(130px, 14vw, 175px)',
+              background: '#fae7c4',
+              borderRadius: 3,
+              padding: '26px 14px 16px',
+              boxShadow: '0 6px 18px rgba(58,51,64,.13)',
+              transform: `rotate(${note.rotation}deg)`,
+            }}>
               <div style={{
                 position: 'absolute',
-                top: -10,
-                left: '50%',
+                top: -10, left: '50%',
                 transform: `translateX(-50%) rotate(${-note.rotation * 1.5}deg)`,
-                width: 84,
-                height: 24,
+                width: 70, height: 22,
                 background: note.tape,
                 borderLeft: `1px dashed ${note.tapeBorder}`,
                 borderRight: `1px dashed ${note.tapeBorder}`,
               }} />
               <div style={{
                 fontFamily: "'Patrick Hand', cursive",
-                fontSize: 'clamp(17px, 2.5vw, 22px)',
-                lineHeight: 1.35,
+                fontSize: 'clamp(14px, 1.6vw, 18px)',
+                lineHeight: 1.4,
                 color: '#6b5a3c',
               }}>{note.text}</div>
             </div>
-          ))}
+          )
+        })}
+
+        {/* Center identity */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Avatar child={child} size={104} square />
+          <h1 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 46,
+            lineHeight: 1.1,
+            color: '#3a3340',
+            marginTop: 18,
+          }}>{child.name}</h1>
+          <div style={{
+            fontFamily: "'Roboto Mono', monospace",
+            fontSize: 18,
+            letterSpacing: '0.06em',
+            color: child.theme.targetColor,
+            marginTop: 10,
+          }}>{clock.date}</div>
+          <div style={{
+            fontFamily: "'Roboto Mono', monospace",
+            fontWeight: 700,
+            fontSize: 50,
+            color: '#3a3340',
+            marginTop: 2,
+          }}>{clock.time}</div>
+          <div
+            className={ticketPop ? 'ticket-pop' : ''}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 9,
+              marginTop: 20,
+              background: '#fff',
+              color: child.theme.textMuted,
+              fontFamily: "'Space Mono', monospace",
+              fontWeight: 700,
+              fontSize: 17,
+              letterSpacing: '0.04em',
+              padding: '12px 24px',
+              borderRadius: 999,
+              boxShadow: `0 3px 12px ${child.theme.shadow}`,
+            }}
+          >🎟️ {state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
         </div>
       </div>
 
