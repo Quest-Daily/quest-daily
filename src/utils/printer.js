@@ -20,7 +20,7 @@ function openReceipt(html) {
   if (!win) return
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Mono:wght@400;700&family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: fit-content; }
@@ -28,6 +28,7 @@ function openReceipt(html) {
   .c     { text-align: center; }
   .b     { font-weight: 700; }
   .serif { font-family: 'DM Serif Display', serif; }
+  .sans  { font-family: 'Hanken Grotesk', sans-serif; }
   .muted { color: #222; }
   .xs    { font-size: 9px; }
   .gap-sm { height: 2px; }
@@ -50,10 +51,10 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
   openReceipt(`
     <div class="c serif" style="font-size:20px; margin-bottom:1px">Quest Daily</div>
     <hr class="solid">
-    <div class="xs muted" style="letter-spacing:0.06em">${nowDateTime()}</div>
+    <div class="sans xs muted" style="letter-spacing:0.04em">${nowDateTime()}</div>
     <div class="gap-sm"></div>
     <div class="serif b" style="font-size:22px; line-height:1.1">${childName}</div>
-    <div style="margin-top:2px"><span class="b">&#x2726; Quest complete:</span> ${questTitle}</div>
+    <div class="sans" style="margin-top:2px"><span class="b">&#x2726; Quest complete:</span> ${questTitle}</div>
     <hr class="dash">
     <div class="row">
       <span class="xs b" style="letter-spacing:0.12em">TICKETS EARNED</span>
