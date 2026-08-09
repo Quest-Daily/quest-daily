@@ -172,7 +172,16 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                     }}>SAVING</div>
                   )}
 
-                  <div style={{ fontSize: 52, marginBottom: 14 }}>{item.icon}</div>
+                  {item.photo ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                      <img src={item.photo} alt={item.title} style={{
+                        width: 80, height: 80, objectFit: 'contain',
+                        borderRadius: 12, background: '#faf6fc',
+                      }} />
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 52, marginBottom: 14 }}>{item.icon}</div>
+                  )}
                   <div style={{
                     fontFamily: "'DM Serif Display', serif",
                     fontSize: 20,

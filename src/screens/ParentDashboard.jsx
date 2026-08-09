@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { CHILDREN, CHILD_ORDER, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
 import { useLocalStorage } from '../hooks'
 
 export default function ParentDashboard({ childState, quests, onUpdateQuests, onUpdate, onBack, onResetState }) {
+  const [ticketValue, setTicketValue] = useLocalStorage('quest-daily-ticket-value', 0.50)
   const allQuests = Object.values(quests).flat()
 
   function handleSuggestion(childId, suggestionId, action) {
@@ -259,6 +260,18 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
         </div>
       )}
 
+      {/* Manage shops */}
+      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, marginBottom: 6 }}>Manage shops</h2>
+      <p style={{ color: '#6f6675', fontSize: 14, marginBottom: 20 }}>
+        Photo a product in a shop or screenshot it online — AI reads the name and price automatically.
+      </p>
+      <ManageShopsPanel
+        childState={childState}
+        onUpdate={onUpdate}
+        ticketValue={ticketValue}
+        onSetTicketValue={setTicketValue}
+      />
+
       {/* Manage quests */}
       <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, marginBottom: 20 }}>Manage quests</h2>
       <ManageQuestsPanel
@@ -320,6 +333,21 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
       </div>
     </div>
   )
+}
+
+function compressProductImage(dataUrl, maxPx = 400) {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      const ratio = Math.min(maxPx / img.width, maxPx / img.height, 1)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * ratio)
+      canvas.height = Math.round(img.height * ratio)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.80))
+    }
+    img.src = dataUrl
+  })
 }
 
 function compressImage(dataUrl, maxPx = 480) {
@@ -689,6 +717,459 @@ function Stat({ label, value, icon, bg, color }) {
         color,
       }}>{value}</div>
       <div style={{ fontSize: 12, color: '#9a8fa6', marginTop: 2 }}>{label}</div>
+    </div>
+  )
+}
+
+// ── Manage shops panel ─────────────────────────────────────────────────────
+
+function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue }) {
+  const [showModal, setShowModal] = useState(false)
+
+  function handleAdd({ name, emoji, photo, ticketPrice, children }) {
+    children.forEach(childId => {
+      onUpdate(childId, s => ({
+        ...s,
+        shopItems: [...(s.shopItems || []), {
+          id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          icon: emoji,
+          title: name,
+          ticketPrice,
+          ...(photo ? { photo } : {}),
+        }],
+      }))
+    })
+    setShowModal(false)
+  }
+
+  function removeItem(childId, itemId) {
+    onUpdate(childId, s => ({
+      ...s,
+      shopItems: (s.shopItems || []).filter(item => item.id !== itemId),
+    }))
+  }
+
+  return (
+    <>
+      <div style={{
+        background: '#fff', borderRadius: 22,
+        padding: '28px 32px',
+        boxShadow: '0 3px 14px rgba(58,51,64,.06)',
+        marginBottom: 40,
+      }}>
+        {/* Ticket value setting */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          padding: '14px 18px',
+          background: '#faf6fc', borderRadius: 14,
+          marginBottom: 24,
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#3a3340', marginBottom: 2 }}>
+              Ticket value
+            </div>
+            <div style={{ fontSize: 13, color: '#9a8fa6' }}>
+              Used to auto-calculate ticket prices from real prices
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 15, color: '#6f6675', fontWeight: 600 }}>$</span>
+            <input
+              type="number"
+              value={ticketValue}
+              onChange={e => onSetTicketValue(Math.max(0.10, Number(e.target.value)))}
+              step={0.25} min={0.10}
+              style={{
+                width: 64, textAlign: 'center',
+                border: '1.5px solid #e0d4e8', borderRadius: 10,
+                padding: '8px', fontSize: 15, fontWeight: 700,
+                fontFamily: "'Space Mono', monospace", color: '#3a3340',
+                outline: 'none', background: '#fff',
+              }}
+            />
+            <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>per ticket</span>
+          </div>
+        </div>
+
+        {/* Big "Add from photo" CTA */}
+        <button
+          onClick={() => setShowModal(true)}
+          style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, #a8689a, #8a5a8a)',
+            color: '#fff',
+            border: 'none', borderRadius: 18,
+            padding: '20px 24px',
+            display: 'flex', alignItems: 'center', gap: 16,
+            cursor: 'pointer', marginBottom: 28,
+            boxShadow: '0 6px 20px rgba(168,104,154,.28)',
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ fontSize: 38 }}>📸</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 21, marginBottom: 3 }}>
+              Add to shop from photo
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.85, lineHeight: 1.4 }}>
+              Photo a toy in a shop or screenshot it online —<br />AI reads the name &amp; price automatically
+            </div>
+          </div>
+          <div style={{ fontSize: 22, opacity: 0.7 }}>→</div>
+        </button>
+
+        {/* Per-child shop item lists */}
+        {CHILD_ORDER.map((id, ci) => {
+          const child = CHILDREN[id]
+          const items = childState[id]?.shopItems || []
+          return (
+            <div key={id} style={{ marginBottom: ci < CHILD_ORDER.length - 1 ? 24 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <Avatar child={child} size={30} />
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
+                  color: child.theme.textMuted, flex: 1,
+                }}>{child.name}'s shop</div>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 11, color: '#9a8fa6',
+                }}>{items.length} item{items.length !== 1 ? 's' : ''}</div>
+              </div>
+              {items.length === 0 ? (
+                <div style={{ fontSize: 13, color: '#b3a9be', padding: '8px 0', fontStyle: 'italic' }}>
+                  No items yet
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {items.map(item => (
+                    <div key={item.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      padding: '10px 14px', background: '#faf6fc', borderRadius: 12,
+                    }}>
+                      {item.photo ? (
+                        <img src={item.photo} alt={item.title} style={{
+                          width: 38, height: 38, objectFit: 'contain',
+                          borderRadius: 8, background: '#fff', flexShrink: 0,
+                        }} />
+                      ) : (
+                        <span style={{ fontSize: 22, width: 38, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                      )}
+                      <span style={{ flex: 1, fontSize: 14, color: '#3a3340' }}>{item.title}</span>
+                      <span style={{
+                        fontFamily: "'Space Mono', monospace", fontSize: 11,
+                        color: '#9a8fa6', background: '#fff',
+                        padding: '3px 9px', borderRadius: 999, flexShrink: 0,
+                      }}>{item.ticketPrice} 🎟️</span>
+                      <button
+                        onClick={() => removeItem(id, item.id)}
+                        style={{
+                          background: 'none', border: 'none', fontSize: 13,
+                          color: '#c9a0a0', cursor: 'pointer', padding: '4px 6px', flexShrink: 0,
+                        }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {showModal && (
+        <AddFromPhotoModal
+          ticketValue={ticketValue}
+          onAdd={handleAdd}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
+  )
+}
+
+// ── Add-from-photo modal ───────────────────────────────────────────────────
+
+function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
+  const [step, setStep] = useState('pick') // 'pick' | 'analyzing' | 'form'
+  const [preview, setPreview] = useState(null)
+  const [name, setName] = useState('')
+  const [emoji, setEmoji] = useState('🎁')
+  const [detectedPrice, setDetectedPrice] = useState(null)
+  const [ticketPrice, setTicketPrice] = useState(20)
+  const [selectedKids, setSelectedKids] = useState([...CHILD_ORDER])
+  const [error, setError] = useState(null)
+  const fileRef = useRef(null)
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError(null)
+
+    const reader = new FileReader()
+    reader.onload = async ev => {
+      const compressed = await compressProductImage(ev.target.result)
+      setPreview(compressed)
+      setStep('analyzing')
+
+      const [header, base64Data] = compressed.split(',')
+      const mimeType = header.match(/:(.*?);/)[1]
+
+      try {
+        const res = await fetch('/api/analyze-product', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Data, mimeType }),
+        })
+        if (!res.ok) throw new Error('API error')
+        const result = await res.json()
+        if (result.error) throw new Error(result.error)
+
+        setName(result.name || '')
+        setEmoji(result.emoji || '🎁')
+        if (result.price && ticketValue > 0) {
+          setDetectedPrice(result.price)
+          setTicketPrice(Math.max(1, Math.round(result.price / ticketValue)))
+        }
+        setStep('form')
+      } catch {
+        setError('Could not auto-detect — please fill in the details below.')
+        setStep('form')
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  function toggleKid(id) {
+    setSelectedKids(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id])
+  }
+
+  function handleAdd() {
+    if (!name.trim() || selectedKids.length === 0) return
+    onAdd({ name: name.trim(), emoji, photo: preview, ticketPrice: Math.max(1, ticketPrice), children: selectedKids })
+  }
+
+  const canSubmit = name.trim().length > 0 && selectedKids.length > 0
+
+  const inputStyle = {
+    border: '1.5px solid #e0d4e8', borderRadius: 12,
+    padding: '11px 14px', fontSize: 15,
+    fontFamily: "'Hanken Grotesk', sans-serif", color: '#3a3340',
+    background: '#fff', outline: 'none', width: '100%',
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(58,51,64,.55)',
+      display: 'flex', alignItems: 'flex-end',
+      backdropFilter: 'blur(4px)',
+    }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <style>{`@keyframes qdSpin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }`}</style>
+
+      <div style={{
+        background: '#fff',
+        borderRadius: '28px 28px 0 0',
+        padding: '28px 28px 48px',
+        width: '100%', maxWidth: 540,
+        margin: '0 auto',
+        maxHeight: '92vh', overflowY: 'auto',
+      }}>
+        {/* Modal header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#3a3340' }}>
+            Add to shop
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#f0e8e0', border: 'none', borderRadius: '50%',
+              width: 36, height: 36, fontSize: 18, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6f6675',
+            }}
+          >×</button>
+        </div>
+
+        {/* STEP: pick */}
+        {step === 'pick' && (
+          <label style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            gap: 14, padding: '48px 24px',
+            border: '2.5px dashed #d3bce6', borderRadius: 20,
+            cursor: 'pointer', background: '#faf6fc',
+          }}>
+            <div style={{ fontSize: 56 }}>📸</div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: '#3a3340', textAlign: 'center' }}>
+              Take or upload a photo
+            </div>
+            <div style={{ color: '#9a8fa6', fontSize: 14, textAlign: 'center', lineHeight: 1.5 }}>
+              Photo a toy in a shop, or screenshot it online —<br />AI will read the name and price for you
+            </div>
+            <div style={{
+              background: '#a8689a', color: '#fff',
+              borderRadius: 999, padding: '11px 28px',
+              fontSize: 14, fontWeight: 600,
+              fontFamily: "'Hanken Grotesk', sans-serif",
+            }}>Choose photo</div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+          </label>
+        )}
+
+        {/* STEP: analyzing */}
+        {step === 'analyzing' && (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            {preview && (
+              <img src={preview} alt="Product" style={{
+                width: 160, height: 160, objectFit: 'contain', borderRadius: 18,
+                background: '#faf6fc', display: 'block', margin: '0 auto 24px',
+                boxShadow: '0 4px 16px rgba(58,51,64,.1)',
+              }} />
+            )}
+            <div style={{ fontSize: 36, marginBottom: 12, display: 'inline-block', animation: 'qdSpin 1.2s linear infinite' }}>✨</div>
+            <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: '#3a3340', marginBottom: 6 }}>
+              Analysing with AI...
+            </div>
+            <div style={{ color: '#9a8fa6', fontSize: 14 }}>Finding the product name and price</div>
+          </div>
+        )}
+
+        {/* STEP: form */}
+        {step === 'form' && (
+          <>
+            {/* Photo preview */}
+            {preview && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+                <img src={preview} alt="Product" style={{
+                  width: 130, height: 130, objectFit: 'contain', borderRadius: 18,
+                  background: '#faf6fc', boxShadow: '0 4px 16px rgba(58,51,64,.1)',
+                }} />
+              </div>
+            )}
+
+            {error && (
+              <div style={{
+                background: '#fff8e1', color: '#8a6800',
+                borderRadius: 12, padding: '10px 14px',
+                fontSize: 13, marginBottom: 16, lineHeight: 1.4,
+              }}>{error}</div>
+            )}
+
+            {/* Name + emoji */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+              <input
+                value={emoji}
+                onChange={e => setEmoji(e.target.value)}
+                maxLength={2}
+                style={{
+                  width: 56, textAlign: 'center', fontSize: 26,
+                  border: '1.5px solid #e0d4e8', borderRadius: 12,
+                  padding: '10px 6px', flexShrink: 0, background: '#faf6fc', outline: 'none',
+                }}
+              />
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Product name"
+                autoFocus
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+
+            {/* Ticket price */}
+            <div style={{ marginBottom: 22 }}>
+              <div style={{
+                fontFamily: "'Space Mono', monospace", fontSize: 11,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: '#9a8fa6', marginBottom: 8,
+              }}>Ticket price</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="number"
+                  value={ticketPrice}
+                  onChange={e => setTicketPrice(Math.max(1, Number(e.target.value)))}
+                  min={1}
+                  style={{
+                    width: 84, textAlign: 'center',
+                    border: '1.5px solid #e0d4e8', borderRadius: 12,
+                    padding: '10px', fontSize: 20, fontWeight: 700,
+                    fontFamily: "'Space Mono', monospace", color: '#3a3340',
+                    background: '#fff', outline: 'none',
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: 15, color: '#3a3340', fontWeight: 600 }}>tickets</div>
+                  {ticketValue > 0 && (
+                    <div style={{ fontSize: 12, color: '#9a8fa6', marginTop: 2 }}>
+                      = ${(ticketPrice * ticketValue).toFixed(2)} value
+                      {detectedPrice ? ` · detected $${detectedPrice.toFixed(2)}` : ''}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Child selector */}
+            <div style={{ marginBottom: 26 }}>
+              <div style={{
+                fontFamily: "'Space Mono', monospace", fontSize: 11,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: '#9a8fa6', marginBottom: 10,
+              }}>Add to whose shop?</div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {CHILD_ORDER.map(id => {
+                  const child = CHILDREN[id]
+                  const sel = selectedKids.includes(id)
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleKid(id)}
+                      style={{
+                        flex: 1, padding: '14px 8px',
+                        borderRadius: 16,
+                        border: `2px solid ${sel ? child.theme.accent : '#e0d4e8'}`,
+                        background: sel ? child.theme.bg : '#fff',
+                        cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span style={{
+                        fontFamily: "'DM Serif Display', serif", fontSize: 22, lineHeight: 1,
+                        color: sel ? child.theme.accent : '#b3a9be',
+                      }}>{child.avatar}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: sel ? child.theme.accent : '#9a8fa6' }}>
+                        {child.name}
+                      </span>
+                      {sel && <span style={{ fontSize: 11, color: child.theme.accent }}>✓</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              onClick={handleAdd}
+              disabled={!canSubmit}
+              style={{
+                width: '100%',
+                background: canSubmit ? '#a8689a' : '#e0d4e8',
+                color: canSubmit ? '#fff' : '#9a8fa6',
+                border: 'none', borderRadius: 999,
+                padding: '16px 0', fontSize: 16, fontWeight: 700,
+                cursor: canSubmit ? 'pointer' : 'default',
+                fontFamily: "'Hanken Grotesk', sans-serif",
+                transition: 'background 0.2s',
+              }}
+            >
+              {canSubmit
+                ? `Add to ${selectedKids.length === 1 ? `${CHILDREN[selectedKids[0]].name}'s shop` : `${selectedKids.length} shops`}`
+                : 'Select a name and child'}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }
