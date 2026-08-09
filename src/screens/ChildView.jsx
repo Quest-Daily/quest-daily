@@ -195,26 +195,27 @@ export default function ChildView({ childId, state, onUpdate, onBack, onOpenShop
             <div key={note.id} style={{
               position: 'absolute',
               ...pos,
-              width: 'clamp(130px, 14vw, 175px)',
+              width: 'clamp(160px, 22vw, 216px)',
+              minHeight: 200,
               background: '#fae7c4',
               borderRadius: 3,
-              padding: '26px 14px 16px',
-              boxShadow: '0 6px 18px rgba(58,51,64,.13)',
+              padding: '32px 20px 22px',
+              boxShadow: '0 6px 14px rgba(58,51,64,.1)',
               transform: `rotate(${note.rotation}deg)`,
             }}>
               <div style={{
                 position: 'absolute',
                 top: -10, left: '50%',
                 transform: `translateX(-50%) rotate(${-note.rotation * 1.5}deg)`,
-                width: 70, height: 22,
+                width: 84, height: 24,
                 background: note.tape,
                 borderLeft: `1px dashed ${note.tapeBorder}`,
                 borderRight: `1px dashed ${note.tapeBorder}`,
               }} />
               <div style={{
                 fontFamily: "'Patrick Hand', cursive",
-                fontSize: 'clamp(14px, 1.6vw, 18px)',
-                lineHeight: 1.4,
+                fontSize: 'clamp(17px, 2.5vw, 22px)',
+                lineHeight: 1.35,
                 color: '#6b5a3c',
               }}>{note.text}</div>
             </div>
