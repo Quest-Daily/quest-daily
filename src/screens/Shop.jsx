@@ -5,12 +5,6 @@ import { printRedemption } from '../utils/printer'
 
 const CARD_TINTS = ['#ede8f5', '#faebd7', '#dce8f5', '#e4f0e2', '#fde0ec', '#fef3cd', '#e8f4f8', '#f5e6d3']
 
-const SHOP_TAGLINES = {
-  max:     ['Goes fast.', 'Looks cool.'],
-  hendrix: ['Play hard.', 'Win bigger.'],
-  felix:   ['Dream big.', 'Earn it.'],
-}
-
 const HERO_COLORS = {
   max:     '#231030',
   hendrix: '#152238',
@@ -29,8 +23,6 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
 
   const categories = ['all', ...Array.from(new Set(shopItems.map(i => i.category).filter(Boolean)))]
   const filtered = activeCategory === 'all' ? shopItems : shopItems.filter(i => i.category === activeCategory)
-  const taglines = SHOP_TAGLINES[childId] || ['Earn it.', 'Spend it.']
-
   function buy(item) {
     if (tickets < item.ticketPrice) return
     setConfirming(null)
@@ -117,47 +109,36 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         </div>
       </nav>
 
-      {/* Compact hero banner */}
+      {/* Hero banner */}
       <div style={{
         background: heroBg,
-        padding: '20px 24px',
-        position: 'relative',
-        overflow: 'hidden',
+        padding: '18px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
       }}>
-        <div style={{
-          position: 'absolute',
-          top: -40, left: -40,
-          width: 200, height: 200,
-          borderRadius: '50%',
-          background: child.theme.accent,
-          opacity: 0.15,
-          filter: 'blur(50px)',
-          pointerEvents: 'none',
-        }} />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontFamily: "'Nunito', sans-serif",
-              fontWeight: 900,
-              fontSize: 'clamp(24px, 5vw, 34px)',
-              lineHeight: 1.05,
-              color: '#ffffff',
-              letterSpacing: '-0.02em',
-            }}>
-              {taglines[0]} {taglines[1]}
-            </div>
-            <div style={{
-              fontSize: 12,
-              color: 'rgba(255,255,255,0.5)',
-              marginTop: 6,
-            }}>
-              Complete quests · collect tickets · spend here
-            </div>
+        <div>
+          <div style={{
+            fontFamily: "'Nunito', sans-serif",
+            fontWeight: 900,
+            fontSize: 28,
+            color: '#ffffff',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.1,
+          }}>
+            {child.name} <span style={{ color: child.theme.accent }}>&amp; Co</span>
           </div>
-
-          <Avatar child={child} size={60} square />
+          <div style={{
+            fontFamily: "'Space Mono', monospace",
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.45)',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            marginTop: 4,
+          }}>Rewards Store</div>
         </div>
+
+        <Avatar child={child} size={52} square />
       </div>
 
       {/* Category filter tabs */}
