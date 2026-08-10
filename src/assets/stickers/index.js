@@ -16,6 +16,7 @@ import soccerBall from './soccer-ball.png'
 import soccerGoalie from './soccer-goalie.png'
 import sportsCar from './sports-car.png'
 import starCookie from './star-cookie.png'
+import whiteRam from './white_ram_4x4.png'
 
 export const CUSTOM_STICKER_IMAGES = {
   'banana-dancing': bananaDancing,
@@ -36,4 +37,5 @@ export const CUSTOM_STICKER_IMAGES = {
   'soccer-goalie': soccerGoalie,
   'sports-car': sportsCar,
   'star-cookie': starCookie,
+  'white-ram': whiteRam,
 }

@@ -139,6 +139,7 @@ export const STICKERS = [
   { id: 'soccer-goalie',    image: true, label: 'Goalie',        category: 'custom'  },
   { id: 'sports-car',       image: true, label: 'Car',           category: 'custom'  },
   { id: 'star-cookie',      image: true, label: 'Star',          category: 'custom'  },
+  { id: 'white-ram',        image: true, label: 'Ram Truck',      category: 'custom'  },
 ]
 
 export const STICKER_CATEGORIES = [
