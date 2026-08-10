@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { CHILDREN } from '../data'
-import Avatar from '../components/Avatar'
 import { printRedemption } from '../utils/printer'
 
 const CARD_TINTS = ['#ede8f5', '#faebd7', '#dce8f5', '#e4f0e2', '#fde0ec', '#fef3cd', '#e8f4f8', '#f5e6d3']
@@ -21,15 +20,14 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
   const tickets = state.tickets
   const heroBg = HERO_COLORS[childId] || '#2e3050'
 
-  const iconBtnStyle = {
+  const ghostBtn = {
     width: 38, height: 38,
-    background: '#f4f2f7',
+    background: 'rgba(255,255,255,0.12)',
     border: 'none',
     borderRadius: 12,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     cursor: 'pointer',
     flexShrink: 0,
-    boxShadow: '0 1px 4px rgba(0,0,0,.06)',
   }
 
   const categories = ['all', ...Array.from(new Set(shopItems.map(i => i.category).filter(Boolean)))]
@@ -68,109 +66,79 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       color: '#1a1a2e',
     }}>
 
-      {/* Top nav bar */}
-      <nav style={{
-        background: '#ffffff',
-        borderBottom: '1px solid #ebe8f0',
-        padding: '0 24px',
-        display: 'flex',
-        alignItems: 'center',
-        height: 56,
+      {/* Hero — back button + centered title + icon buttons all in one dark banner */}
+      <div style={{
+        background: heroBg,
+        padding: '16px 20px 28px',
         position: 'sticky',
         top: 0,
         zIndex: 100,
       }}>
-        <button
-          onClick={onBack}
-          style={{
-            background: 'none', border: 'none',
-            color: '#6f6675', cursor: 'pointer',
-            fontSize: 20, padding: '8px 8px 8px 0',
-            lineHeight: 1, flexShrink: 0,
-          }}
-        >←</button>
+        {/* Top row: back ← | spacer | icons */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <button onClick={onBack} style={ghostBtn}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
 
-        <div style={{
-          fontFamily: "'Nunito', sans-serif",
-          fontWeight: 900,
-          fontSize: 20,
-          color: '#1a1a2e',
-          letterSpacing: '-0.03em',
-          marginLeft: 8,
-        }}>
-          {child.name} <span style={{ color: child.theme.accent }}>&amp; Co</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* Search */}
+            <button style={ghostBtn}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            {/* Wishlist */}
+            <button style={ghostBtn}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </button>
+            {/* Cart + ticket badge */}
+            <button style={{ ...ghostBtn, position: 'relative' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19.4a2 2 0 001.98-1.71L23 6H6"/>
+              </svg>
+              {tickets > 0 && (
+                <div style={{
+                  position: 'absolute', top: -4, right: -4,
+                  background: child.theme.accent,
+                  color: '#fff',
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 9, fontWeight: 700,
+                  minWidth: 16, height: 16,
+                  borderRadius: 999,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 3px',
+                }}>{tickets}</div>
+              )}
+            </button>
+          </div>
         </div>
 
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Search */}
-          <button style={iconBtnStyle}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e3050" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          </button>
-
-          {/* Wishlist */}
-          <button style={iconBtnStyle}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e3050" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
-
-          {/* Cart — shows ticket count */}
-          <button style={{ ...iconBtnStyle, position: 'relative' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e3050" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19.4a2 2 0 001.98-1.71L23 6H6"/>
-            </svg>
-            {tickets > 0 && (
-              <div style={{
-                position: 'absolute', top: -4, right: -4,
-                background: child.theme.accent,
-                color: '#fff',
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 9, fontWeight: 700,
-                minWidth: 16, height: 16,
-                borderRadius: 999,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '0 3px',
-              }}>{tickets}</div>
-            )}
-          </button>
-        </div>
-      </nav>
-
-      {/* Hero banner */}
-      <div style={{
-        background: heroBg,
-        padding: '18px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div>
+        {/* Centered store title */}
+        <div style={{ textAlign: 'center' }}>
           <div style={{
             fontFamily: "'Nunito', sans-serif",
             fontWeight: 900,
-            fontSize: 28,
+            fontSize: 42,
             color: '#ffffff',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.1,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
           }}>
             {child.name} <span style={{ color: child.theme.accent }}>&amp; Co</span>
           </div>
           <div style={{
             fontFamily: "'Space Mono', monospace",
             fontSize: 10,
-            color: 'rgba(255,255,255,0.45)',
-            letterSpacing: '0.18em',
+            color: 'rgba(255,255,255,0.38)',
+            letterSpacing: '0.22em',
             textTransform: 'uppercase',
-            marginTop: 4,
+            marginTop: 10,
           }}>Rewards Store</div>
         </div>
-
-        <Avatar child={child} size={52} square />
       </div>
 
       {/* Category filter tabs */}
@@ -208,7 +176,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       {/* Success toast */}
       {justBought && (
         <div style={{
-          position: 'fixed', top: 72, left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', top: 140, left: '50%', transform: 'translateX(-50%)',
           background: '#1a1a2e', color: '#fff',
           fontFamily: "'Hanken Grotesk', sans-serif",
           fontWeight: 600, fontSize: 15,
@@ -242,8 +210,8 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-            gap: 12,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
+            gap: 16,
             marginBottom: 28,
           }}>
             {filtered.map((item, idx) => {
@@ -255,64 +223,61 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                 <div key={item.id}
                   onClick={() => canAfford && !isConfirming && setConfirming(item.id)}
                   style={{
-                    background: '#ffffff',
-                    borderRadius: 16,
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 12px rgba(0,0,0,.07)',
-                    opacity: canAfford ? 1 : 0.72,
+                    opacity: canAfford ? 1 : 0.65,
                     cursor: canAfford && !isConfirming ? 'pointer' : 'default',
-                    border: isConfirming ? `2px solid ${child.theme.accent}` : '2px solid transparent',
-                    transition: 'opacity 0.2s, border-color 0.15s',
+                    transition: 'opacity 0.2s',
                   }}
                 >
-                  {/* Image zone — taller, more Kidstuff-like */}
+                  {/* Image zone — dashed border, Kidstuff style */}
                   <div style={{
                     background: tint,
-                    height: 180,
+                    borderRadius: 20,
+                    border: isConfirming
+                      ? `2px solid ${child.theme.accent}`
+                      : `2px dashed ${child.theme.dashed}`,
+                    height: 200,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative',
                     overflow: 'hidden',
+                    marginBottom: 10,
+                    transition: 'border-color 0.15s',
                   }}>
-                    {/* Only show badge when affordable */}
                     {canAfford && (
                       <div style={{
                         position: 'absolute',
-                        top: 10, left: 10,
-                        background: '#daf5d4',
-                        color: '#2e7d32',
-                        fontFamily: "'Space Mono', monospace",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        padding: '3px 8px',
+                        top: 12, left: 12,
+                        background: child.theme.bg,
+                        color: child.theme.textMuted,
+                        fontFamily: "'Nunito', sans-serif",
+                        fontSize: 10,
+                        fontWeight: 800,
+                        padding: '4px 10px',
                         borderRadius: 999,
                         letterSpacing: '0.04em',
                         textTransform: 'uppercase',
-                      }}>✓ Can buy</div>
+                      }}>Can buy</div>
                     )}
 
                     {item.photo ? (
-                      <img
-                        src={item.photo}
-                        alt={item.title}
-                        style={{ width: '78%', height: '78%', objectFit: 'contain' }}
-                      />
+                      <img src={item.photo} alt={item.title}
+                        style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
                     ) : (
-                      <div style={{ fontSize: 64 }}>{item.icon}</div>
+                      <div style={{ fontSize: 66 }}>{item.icon}</div>
                     )}
                   </div>
 
-                  {/* Card body */}
-                  <div style={{ padding: '12px 14px 14px' }}>
+                  {/* Text below the image zone */}
+                  <div style={{ padding: '0 4px' }}>
                     {item.category && (
                       <div style={{
                         fontFamily: "'Space Mono', monospace",
                         fontSize: 9,
-                        color: '#b3a9be',
+                        color: child.theme.textMuted,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        marginBottom: 4,
+                        letterSpacing: '0.12em',
+                        marginBottom: 3,
                       }}>{item.category}</div>
                     )}
 
@@ -321,24 +286,18 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                       fontWeight: 800,
                       fontSize: 15,
                       color: '#1a1a2e',
-                      lineHeight: 1.25,
-                      marginBottom: 10,
+                      lineHeight: 1.2,
+                      marginBottom: 5,
                     }}>{item.title}</div>
 
-                    {/* Price row */}
                     {!isConfirming ? (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 12c0-1.1.9-2 2-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4c-1.1 0-2-.9-2-2z" fill="#3d8c4a"/>
-                          </svg>
-                          <span style={{
-                            fontFamily: "'Nunito', sans-serif",
-                            fontWeight: 800,
-                            fontSize: 17,
-                            color: '#3d8c4a',
-                          }}>{item.ticketPrice}</span>
-                        </div>
+                        <span style={{
+                          fontFamily: "'Nunito', sans-serif",
+                          fontWeight: 800,
+                          fontSize: 17,
+                          color: '#3d8c4a',
+                        }}>🎟 {item.ticketPrice}</span>
                         {!canAfford && (
                           <span style={{
                             fontFamily: "'Space Mono', monospace",
@@ -347,11 +306,11 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                             background: '#fdf0f2',
                             padding: '2px 7px',
                             borderRadius: 999,
-                          }}>need {item.ticketPrice - tickets} more</span>
+                          }}>+{item.ticketPrice - tickets}</span>
                         )}
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                         <button
                           onClick={e => { e.stopPropagation(); buy(item) }}
                           style={{
@@ -359,8 +318,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                             background: heroBg, color: '#fff',
                             border: 'none', borderRadius: 10,
                             padding: '10px 0', fontSize: 13, fontWeight: 700,
-                            cursor: 'pointer',
-                            fontFamily: "'Nunito', sans-serif",
+                            cursor: 'pointer', fontFamily: "'Nunito', sans-serif",
                           }}
                         >Buy!</button>
                         <button
@@ -368,8 +326,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                           style={{
                             background: '#f0e8e0', color: '#6f6675',
                             border: 'none', borderRadius: 10,
-                            padding: '10px 12px', fontSize: 13,
-                            cursor: 'pointer',
+                            padding: '10px 12px', fontSize: 13, cursor: 'pointer',
                           }}
                         >✕</button>
                       </div>
