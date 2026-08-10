@@ -210,8 +210,8 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
-            gap: 16,
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 14,
             marginBottom: 28,
           }}>
             {filtered.map((item, idx) => {
@@ -228,14 +228,14 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                     transition: 'opacity 0.2s',
                   }}
                 >
-                  {/* Image zone — dashed border, Kidstuff style */}
+                  {/* Image zone — portrait dashed-border zone, Kidstuff style */}
                   <div style={{
                     background: tint,
-                    borderRadius: 20,
+                    borderRadius: 18,
                     border: isConfirming
                       ? `2px solid ${child.theme.accent}`
                       : `2px dashed ${child.theme.dashed}`,
-                    height: 200,
+                    aspectRatio: '1 / 1.1',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -244,73 +244,55 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                     marginBottom: 10,
                     transition: 'border-color 0.15s',
                   }}>
-                    {canAfford && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 12, left: 12,
-                        background: child.theme.bg,
-                        color: child.theme.textMuted,
-                        fontFamily: "'Nunito', sans-serif",
-                        fontSize: 10,
-                        fontWeight: 800,
-                        padding: '4px 10px',
-                        borderRadius: 999,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                      }}>Can buy</div>
-                    )}
-
                     {item.photo ? (
                       <img src={item.photo} alt={item.title}
-                        style={{ width: '78%', height: '78%', objectFit: 'contain' }} />
+                        style={{ width: '75%', height: '75%', objectFit: 'contain' }} />
                     ) : (
-                      <div style={{ fontSize: 66 }}>{item.icon}</div>
+                      <div style={{ fontSize: 72, lineHeight: 1 }}>{item.icon}</div>
                     )}
                   </div>
 
                   {/* Text below the image zone */}
-                  <div style={{ padding: '0 4px' }}>
+                  <div style={{ padding: '0 2px' }}>
                     {item.category && (
                       <div style={{
                         fontFamily: "'Space Mono', monospace",
-                        fontSize: 9,
+                        fontSize: 8,
                         color: child.theme.textMuted,
                         textTransform: 'uppercase',
                         letterSpacing: '0.12em',
-                        marginBottom: 3,
+                        marginBottom: 4,
                       }}>{item.category}</div>
                     )}
 
                     <div style={{
                       fontFamily: "'Nunito', sans-serif",
                       fontWeight: 800,
-                      fontSize: 15,
+                      fontSize: 14,
                       color: '#1a1a2e',
-                      lineHeight: 1.2,
-                      marginBottom: 5,
+                      lineHeight: 1.25,
+                      marginBottom: 6,
                     }}>{item.title}</div>
 
                     {!isConfirming ? (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{
                           fontFamily: "'Nunito', sans-serif",
                           fontWeight: 800,
-                          fontSize: 17,
-                          color: '#3d8c4a',
+                          fontSize: 16,
+                          color: canAfford ? '#3d8c4a' : '#9a8fa6',
                         }}>🎟 {item.ticketPrice}</span>
                         {!canAfford && (
                           <span style={{
-                            fontFamily: "'Space Mono', monospace",
-                            fontSize: 9,
+                            fontFamily: "'Nunito', sans-serif",
+                            fontSize: 10,
+                            fontWeight: 700,
                             color: '#b5546a',
-                            background: '#fdf0f2',
-                            padding: '2px 7px',
-                            borderRadius: 999,
-                          }}>+{item.ticketPrice - tickets}</span>
+                          }}>need {item.ticketPrice - tickets} more</span>
                         )}
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                         <button
                           onClick={e => { e.stopPropagation(); buy(item) }}
                           style={{
