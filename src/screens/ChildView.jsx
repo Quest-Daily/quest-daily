@@ -87,7 +87,6 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
   }
 
   function startDrag(e, type, idx, action) {
-    e.stopPropagation()
     e.preventDefault()
     movedRef.current = false
     const rect = headerRef.current?.getBoundingClientRect()
@@ -345,7 +344,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         }}
         onPointerMove={onHeaderPointerMove}
         onPointerUp={onHeaderPointerUp}
-        onClick={handleBoardClick}
+        onPointerDown={e => { if (e.target === e.currentTarget) setSelected(null) }}
       >
         {/* Notes */}
         {headerNotes.map((note, idx) => {
