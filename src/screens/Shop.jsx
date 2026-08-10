@@ -11,6 +11,12 @@ const SHOP_TAGLINES = {
   felix:   ['Dream big.', 'Earn it.'],
 }
 
+const HERO_COLORS = {
+  max:     '#231030',
+  hendrix: '#152238',
+  felix:   '#162a18',
+}
+
 export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
   const child = CHILDREN[childId]
   const [justBought, setJustBought] = useState(null)
@@ -19,10 +25,10 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
 
   const shopItems = state.shopItems || []
   const tickets = state.tickets
+  const heroBg = HERO_COLORS[childId] || '#2e3050'
 
   const categories = ['all', ...Array.from(new Set(shopItems.map(i => i.category).filter(Boolean)))]
   const filtered = activeCategory === 'all' ? shopItems : shopItems.filter(i => i.category === activeCategory)
-
   const taglines = SHOP_TAGLINES[childId] || ['Earn it.', 'Spend it.']
 
   function buy(item) {
@@ -66,7 +72,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
-        height: 64,
+        height: 56,
         position: 'sticky',
         top: 0,
         zIndex: 100,
@@ -81,11 +87,10 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
           }}
         >←</button>
 
-        {/* Wordmark */}
         <div style={{
           fontFamily: "'Nunito', sans-serif",
           fontWeight: 900,
-          fontSize: 22,
+          fontSize: 20,
           color: '#1a1a2e',
           letterSpacing: '-0.03em',
           marginLeft: 8,
@@ -93,109 +98,65 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
           {child.name} <span style={{ color: child.theme.accent }}>&amp; Co</span>
         </div>
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Ticket balance pill */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           background: child.theme.bg,
           color: child.theme.textMuted,
           fontFamily: "'Space Mono', monospace",
           fontWeight: 700,
-          fontSize: 14,
-          padding: '7px 16px',
+          fontSize: 13,
+          padding: '6px 14px',
           borderRadius: 999,
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M20 12c0-1.1.9-2 2-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4c-1.1 0-2-.9-2-2z" fill="currentColor" opacity=".85"/>
           </svg>
           {tickets}
         </div>
       </nav>
 
-      {/* Hero section */}
+      {/* Compact hero banner */}
       <div style={{
-        background: '#2e3050',
-        padding: '40px 28px 36px',
+        background: heroBg,
+        padding: '20px 24px',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Subtle radial glow behind text */}
         <div style={{
           position: 'absolute',
-          top: -60, left: -60,
-          width: 300, height: 300,
+          top: -40, left: -40,
+          width: 200, height: 200,
           borderRadius: '50%',
           background: child.theme.accent,
-          opacity: 0.12,
-          filter: 'blur(60px)',
+          opacity: 0.15,
+          filter: 'blur(50px)',
           pointerEvents: 'none',
         }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ flex: 1 }}>
             <div style={{
               fontFamily: "'Nunito', sans-serif",
               fontWeight: 900,
-              fontSize: 'clamp(38px, 8vw, 56px)',
-              lineHeight: 1.0,
+              fontSize: 'clamp(24px, 5vw, 34px)',
+              lineHeight: 1.05,
               color: '#ffffff',
               letterSpacing: '-0.02em',
-              marginBottom: 14,
-              textWrap: 'balance',
             }}>
-              {taglines[0]}<br />{taglines[1]}
+              {taglines[0]} {taglines[1]}
             </div>
             <div style={{
-              fontSize: 14,
-              color: 'rgba(255,255,255,0.6)',
-              marginBottom: 24,
-              lineHeight: 1.5,
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.5)',
+              marginTop: 6,
             }}>
-              Complete quests, collect tickets,<br />grab your rewards.
+              Complete quests · collect tickets · spend here
             </div>
-            <button
-              onClick={() => document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth' })}
-              style={{
-                background: child.theme.accent === '#a8689a'
-                  ? '#b8eeae'
-                  : child.theme.accent === '#4f7099'
-                  ? '#aee0ee'
-                  : '#aeeec8',
-                color: '#1a1a2e',
-                border: 'none',
-                borderRadius: 999,
-                padding: '12px 24px',
-                fontFamily: "'Nunito', sans-serif",
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: 'pointer',
-                letterSpacing: '-0.01em',
-              }}
-            >Shop the drop →</button>
           </div>
 
-          {/* Avatar / ticket display */}
-          <div style={{
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 10,
-          }}>
-            <Avatar child={child} size={88} square />
-            <div style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 10,
-              color: 'rgba(255,255,255,0.45)',
-              textAlign: 'center',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}>
-              {tickets} ticket{tickets !== 1 ? 's' : ''}
-            </div>
-          </div>
+          <Avatar child={child} size={60} square />
         </div>
       </div>
 
@@ -203,9 +164,8 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       <div style={{
         background: '#ffffff',
         borderBottom: '1px solid #ebe8f0',
-        padding: '0 24px',
+        padding: '0 20px',
         display: 'flex',
-        gap: 0,
         overflowX: 'auto',
       }}>
         {categories.map(cat => (
@@ -220,7 +180,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
               fontFamily: "'Hanken Grotesk', sans-serif",
               fontWeight: activeCategory === cat ? 700 : 500,
               fontSize: 14,
-              padding: '14px 16px 12px',
+              padding: '12px 14px 10px',
               cursor: 'pointer',
               textTransform: 'capitalize',
               whiteSpace: 'nowrap',
@@ -235,7 +195,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       {/* Success toast */}
       {justBought && (
         <div style={{
-          position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', top: 72, left: '50%', transform: 'translateX(-50%)',
           background: '#1a1a2e', color: '#fff',
           fontFamily: "'Hanken Grotesk', sans-serif",
           fontWeight: 600, fontSize: 15,
@@ -248,7 +208,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         </div>
       )}
 
-      <div style={{ padding: '28px 20px 60px' }} id="shop-grid">
+      <div style={{ padding: '20px 16px 60px' }} id="shop-grid">
 
         {/* Shop items grid */}
         {filtered.length === 0 ? (
@@ -269,9 +229,9 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(155px, 1fr))',
-            gap: 14,
-            marginBottom: 32,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: 12,
+            marginBottom: 28,
           }}>
             {filtered.map((item, idx) => {
               const canAfford = tickets >= item.ticketPrice
@@ -279,55 +239,54 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
               const tint = CARD_TINTS[idx % CARD_TINTS.length]
 
               return (
-                <div key={item.id} style={{
-                  background: '#ffffff',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 12px rgba(0,0,0,.06)',
-                  opacity: canAfford ? 1 : 0.75,
-                  transition: 'transform 0.15s, opacity 0.2s',
-                  cursor: canAfford && !isConfirming ? 'pointer' : 'default',
-                }}
+                <div key={item.id}
                   onClick={() => canAfford && !isConfirming && setConfirming(item.id)}
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 12px rgba(0,0,0,.07)',
+                    opacity: canAfford ? 1 : 0.72,
+                    cursor: canAfford && !isConfirming ? 'pointer' : 'default',
+                    border: isConfirming ? `2px solid ${child.theme.accent}` : '2px solid transparent',
+                    transition: 'opacity 0.2s, border-color 0.15s',
+                  }}
                 >
-                  {/* Image zone */}
+                  {/* Image zone — taller, more Kidstuff-like */}
                   <div style={{
                     background: tint,
-                    height: 140,
+                    height: 180,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative',
                     overflow: 'hidden',
                   }}>
-                    {/* Affordability badge */}
-                    <div style={{
-                      position: 'absolute',
-                      top: 10, left: 10,
-                      background: canAfford ? '#daf5d4' : '#f5dae0',
-                      color: canAfford ? '#2e7d32' : '#b5546a',
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: 9,
-                      fontWeight: 700,
-                      padding: '3px 8px',
-                      borderRadius: 999,
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                    }}>
-                      {canAfford ? '✓ Can buy' : `Need ${item.ticketPrice - tickets} more`}
-                    </div>
+                    {/* Only show badge when affordable */}
+                    {canAfford && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 10, left: 10,
+                        background: '#daf5d4',
+                        color: '#2e7d32',
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: 999,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                      }}>✓ Can buy</div>
+                    )}
 
                     {item.photo ? (
                       <img
                         src={item.photo}
                         alt={item.title}
-                        style={{
-                          width: '80%', height: '80%',
-                          objectFit: 'contain',
-                        }}
+                        style={{ width: '78%', height: '78%', objectFit: 'contain' }}
                       />
                     ) : (
-                      <div style={{ fontSize: 56 }}>{item.icon}</div>
+                      <div style={{ fontSize: 64 }}>{item.icon}</div>
                     )}
                   </div>
 
@@ -340,9 +299,10 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                         color: '#b3a9be',
                         textTransform: 'uppercase',
                         letterSpacing: '0.1em',
-                        marginBottom: 5,
+                        marginBottom: 4,
                       }}>{item.category}</div>
                     )}
+
                     <div style={{
                       fontFamily: "'Nunito', sans-serif",
                       fontWeight: 800,
@@ -353,38 +313,39 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                     }}>{item.title}</div>
 
                     {/* Price row */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      marginBottom: isConfirming ? 10 : 0,
-                    }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 12c0-1.1.9-2 2-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4c-1.1 0-2-.9-2-2z" fill="#3d8c4a"/>
-                      </svg>
-                      <span style={{
-                        fontFamily: "'Nunito', sans-serif",
-                        fontWeight: 800,
-                        fontSize: 16,
-                        color: '#3d8c4a',
-                      }}>{item.ticketPrice}</span>
-                      <span style={{
-                        fontFamily: "'Hanken Grotesk', sans-serif",
-                        fontSize: 11,
-                        color: '#9a8fa6',
-                      }}>tickets</span>
-                    </div>
-
-                    {/* Confirm buttons */}
-                    {isConfirming && (
+                    {!isConfirming ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 12c0-1.1.9-2 2-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4c-1.1 0-2-.9-2-2z" fill="#3d8c4a"/>
+                          </svg>
+                          <span style={{
+                            fontFamily: "'Nunito', sans-serif",
+                            fontWeight: 800,
+                            fontSize: 17,
+                            color: '#3d8c4a',
+                          }}>{item.ticketPrice}</span>
+                        </div>
+                        {!canAfford && (
+                          <span style={{
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: 9,
+                            color: '#b5546a',
+                            background: '#fdf0f2',
+                            padding: '2px 7px',
+                            borderRadius: 999,
+                          }}>need {item.ticketPrice - tickets} more</span>
+                        )}
+                      </div>
+                    ) : (
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
                           onClick={e => { e.stopPropagation(); buy(item) }}
                           style={{
                             flex: 1,
-                            background: '#1a1a2e', color: '#fff',
+                            background: heroBg, color: '#fff',
                             border: 'none', borderRadius: 10,
-                            padding: '9px 0', fontSize: 13, fontWeight: 700,
+                            padding: '10px 0', fontSize: 13, fontWeight: 700,
                             cursor: 'pointer',
                             fontFamily: "'Nunito', sans-serif",
                           }}
@@ -394,9 +355,8 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                           style={{
                             background: '#f0e8e0', color: '#6f6675',
                             border: 'none', borderRadius: 10,
-                            padding: '9px 10px', fontSize: 13,
+                            padding: '10px 12px', fontSize: 13,
                             cursor: 'pointer',
-                            fontFamily: "'Hanken Grotesk', sans-serif",
                           }}
                         >✕</button>
                       </div>
@@ -410,29 +370,26 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
 
         {/* Suggest a reward */}
         <div style={{
-          background: '#2e3050',
-          borderRadius: 20,
-          padding: '24px 26px',
+          background: heroBg,
+          borderRadius: 18,
+          padding: '20px 22px',
           display: 'flex',
           alignItems: 'center',
-          gap: 18,
+          gap: 16,
           flexWrap: 'wrap',
-          marginBottom: 36,
+          marginBottom: 32,
         }}>
-          <div style={{ fontSize: 36 }}>🌟</div>
+          <div style={{ fontSize: 30 }}>🌟</div>
           <div style={{ flex: 1, minWidth: 160 }}>
             <div style={{
               fontFamily: "'Nunito', sans-serif",
               fontWeight: 800,
-              fontSize: 18,
+              fontSize: 16,
               color: '#ffffff',
-              marginBottom: 4,
-              letterSpacing: '-0.01em',
-            }}>
-              Don't see what you want?
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
-              Suggest a reward and Mum or Dad can add it.
+              marginBottom: 3,
+            }}>Don't see what you want?</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+              Suggest it and Mum or Dad can add it.
             </div>
           </div>
           <button
@@ -441,10 +398,9 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
               background: child.theme.accent,
               color: '#fff',
               border: 'none', borderRadius: 999,
-              padding: '12px 22px', fontSize: 14, fontWeight: 700,
+              padding: '10px 20px', fontSize: 13, fontWeight: 700,
               cursor: 'pointer', flexShrink: 0,
               fontFamily: "'Nunito', sans-serif",
-              letterSpacing: '-0.01em',
             }}
           >Suggest →</button>
         </div>
@@ -455,9 +411,9 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
             <div style={{
               fontFamily: "'Nunito', sans-serif",
               fontWeight: 900,
-              fontSize: 20,
+              fontSize: 18,
               color: '#1a1a2e',
-              marginBottom: 14,
+              marginBottom: 12,
               letterSpacing: '-0.02em',
             }}>Things you've bought</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -465,18 +421,18 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                 <div key={r.id} style={{
                   background: '#fff',
                   borderRadius: 14,
-                  padding: '13px 18px',
+                  padding: '12px 16px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 14,
+                  gap: 12,
                   boxShadow: '0 1px 6px rgba(0,0,0,.04)',
                 }}>
-                  <div style={{ fontSize: 26 }}>{r.itemIcon}</div>
+                  <div style={{ fontSize: 24 }}>{r.itemIcon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e' }}>{r.itemTitle}</div>
                     <div style={{
                       fontFamily: "'Space Mono', monospace",
-                      fontSize: 11,
+                      fontSize: 10,
                       color: '#9a8fa6',
                       marginTop: 2,
                     }}>{r.date}</div>
