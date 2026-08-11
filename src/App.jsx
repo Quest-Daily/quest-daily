@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createInitialState, QUESTS } from './data'
+import { createInitialState, QUESTS, CHILD_ORDER } from './data'
 import SignIn from './screens/SignIn'
 import ParentPin from './screens/ParentPin'
 import FamilyHome from './screens/FamilyHome'
@@ -8,9 +8,18 @@ import Shop from './screens/Shop'
 import SuggestReward from './screens/SuggestReward'
 import ParentDashboard from './screens/ParentDashboard'
 
+function parseHash() {
+  const h = window.location.hash.slice(1)
+  if (h === 'home') return { screen: 'family-home', child: null }
+  if (h.startsWith('child/') && CHILD_ORDER.includes(h.slice(6))) return { screen: 'child-view', child: h.slice(6) }
+  if (h.startsWith('shop/') && CHILD_ORDER.includes(h.slice(5))) return { screen: 'shop', child: h.slice(5) }
+  if (h.startsWith('suggest/') && CHILD_ORDER.includes(h.slice(8))) return { screen: 'suggest-reward', child: h.slice(8) }
+  return { screen: 'signin', child: null }
+}
+
 export default function App() {
-  const [screen, setScreen] = useState('signin')
-  const [currentChild, setCurrentChild] = useState(null)
+  const [screen, setScreen] = useState(() => parseHash().screen)
+  const [currentChild, setCurrentChild] = useState(() => parseHash().child)
 
   const [childState, setChildState] = useState(() => {
     try {
@@ -55,6 +64,17 @@ export default function App() {
     } catch {}
     return QUESTS
   })
+
+  // Keep URL hash in sync so reloading restores the current screen
+  useEffect(() => {
+    const hash =
+      screen === 'family-home'                      ? '#home' :
+      screen === 'child-view'   && currentChild     ? `#child/${currentChild}` :
+      screen === 'shop'         && currentChild     ? `#shop/${currentChild}` :
+      screen === 'suggest-reward' && currentChild   ? `#suggest/${currentChild}` :
+      '#'
+    window.history.replaceState(null, '', hash)
+  }, [screen, currentChild])
 
   useEffect(() => {
     localStorage.setItem('quest-daily-state', JSON.stringify(childState))
