@@ -811,7 +811,6 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
       <div id="section-sideQuests" style={{
         background: '#faf0ec',
         padding: '44px 48px 48px',
-        textAlign: 'center',
         marginTop: 16,
       }}>
         <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, color: '#3a3340' }}>Side quests</h2>
