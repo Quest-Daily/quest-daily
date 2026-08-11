@@ -723,10 +723,27 @@ function Stat({ label, value, icon, bg, color }) {
 
 // ── Manage shops panel ─────────────────────────────────────────────────────
 
+const DEFAULT_CATEGORIES = ['Gaming', 'Toys', 'Clothes', 'Food', 'Activities', 'Money']
+
 function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue }) {
   const [showModal, setShowModal] = useState(false)
+  const [savedCategories, setSavedCategories] = useLocalStorage(
+    'quest-daily-categories',
+    DEFAULT_CATEGORIES
+  )
+
+  // Merge saved + any categories already used on items (in case of old data)
+  const allItemCategories = CHILD_ORDER.flatMap(id =>
+    (childState[id]?.shopItems || []).map(i => i.category).filter(Boolean)
+  )
+  const categories = [...new Set([...savedCategories, ...allItemCategories])]
 
   function handleAdd({ name, emoji, photo, ticketPrice, children, category }) {
+    // Persist new category for future use
+    if (category && !savedCategories.map(c => c.toLowerCase()).includes(category.toLowerCase())) {
+      const display = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()
+      setSavedCategories(prev => [...prev, display])
+    }
     children.forEach(childId => {
       onUpdate(childId, s => ({
         ...s,
@@ -741,6 +758,10 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
       }))
     })
     setShowModal(false)
+  }
+
+  function deleteCategory(cat) {
+    setSavedCategories(prev => prev.filter(c => c !== cat))
   }
 
   function removeItem(childId, itemId) {
@@ -791,6 +812,18 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
             <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>per ticket</span>
           </div>
         </div>
+
+        {/* Category manager */}
+        <CategoryManager
+          categories={categories}
+          onDelete={deleteCategory}
+          onAdd={name => {
+            const display = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+            if (!categories.map(c => c.toLowerCase()).includes(name.toLowerCase())) {
+              setSavedCategories(prev => [...prev, display])
+            }
+          }}
+        />
 
         {/* Big "Add from photo" CTA */}
         <button
@@ -881,6 +914,7 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
       {showModal && (
         <AddFromPhotoModal
           ticketValue={ticketValue}
+          categories={categories}
           onAdd={handleAdd}
           onClose={() => setShowModal(false)}
         />
@@ -889,9 +923,82 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
   )
 }
 
+// ── Category manager ──────────────────────────────────────────────────────
+
+function CategoryManager({ categories, onDelete, onAdd }) {
+  const [newCat, setNewCat] = useState('')
+  const inputRef = useRef(null)
+
+  function submit() {
+    const val = newCat.trim()
+    if (!val) return
+    onAdd(val)
+    setNewCat('')
+    inputRef.current?.focus()
+  }
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{
+        fontFamily: "'Space Mono', monospace", fontSize: 11,
+        letterSpacing: '0.16em', textTransform: 'uppercase',
+        color: '#9a8fa6', marginBottom: 10,
+      }}>Shop categories</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 10 }}>
+        {categories.map(cat => (
+          <div key={cat} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: '#f0e8f8', borderRadius: 999,
+            padding: '5px 10px 5px 14px',
+            fontSize: 12, fontWeight: 600, color: '#7a5a8a',
+            fontFamily: "'Hanken Grotesk', sans-serif",
+          }}>
+            {cat}
+            <button
+              onClick={() => onDelete(cat)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: '#b090c8', fontSize: 11, padding: '0 2px', lineHeight: 1,
+              }}
+            >✕</button>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          ref={inputRef}
+          value={newCat}
+          onChange={e => setNewCat(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && submit()}
+          placeholder="Add a category…"
+          style={{
+            flex: 1,
+            border: '1.5px solid #e0d4e8', borderRadius: 10,
+            padding: '8px 12px', fontSize: 13, outline: 'none',
+            fontFamily: "'Hanken Grotesk', sans-serif", color: '#3a3340',
+            background: '#faf6fc',
+          }}
+        />
+        <button
+          onClick={submit}
+          disabled={!newCat.trim()}
+          style={{
+            background: newCat.trim() ? '#a8689a' : '#e0d4e8',
+            color: '#fff', border: 'none', borderRadius: 10,
+            padding: '8px 16px', fontSize: 13, fontWeight: 600,
+            cursor: newCat.trim() ? 'pointer' : 'default',
+            fontFamily: "'Hanken Grotesk', sans-serif",
+            transition: 'background 0.15s',
+          }}
+        >Add</button>
+      </div>
+    </div>
+  )
+}
+
 // ── Add-from-photo modal ───────────────────────────────────────────────────
 
-function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
+function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
   const [step, setStep] = useState('pick') // 'pick' | 'analyzing' | 'form'
   const [preview, setPreview] = useState(null)
   const [name, setName] = useState('')
@@ -1086,7 +1193,7 @@ function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
                 color: '#9a8fa6', marginBottom: 8,
               }}>Category (optional)</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                {['Gaming', 'Toys', 'Clothes', 'Food', 'Activities', 'Money'].map(c => (
+                {(categories || []).map(c => (
                   <button
                     key={c}
                     onClick={() => setCategory(category === c.toLowerCase() ? '' : c.toLowerCase())}
@@ -1102,8 +1209,8 @@ function AddFromPhotoModal({ ticketValue, onAdd, onClose }) {
               </div>
               <input
                 value={category}
-                onChange={e => setCategory(e.target.value.toLowerCase())}
-                placeholder="or type a custom category..."
+                onChange={e => setCategory(e.target.value)}
+                placeholder="or type a new category…"
                 style={{ ...inputStyle, fontSize: 13 }}
               />
             </div>
