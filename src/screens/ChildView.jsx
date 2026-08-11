@@ -635,24 +635,21 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         zIndex: 50,
       }}>
         {[
-          { label: 'Quests',          icon: '⚔️',  id: 'section-quests' },
-          { label: 'Side Quests',     icon: '⭐',  id: 'section-sideQuests' },
-          { label: 'Routine Tracker', icon: '⏰',  id: 'section-routines' },
-          { label: 'Rewards Shop',    icon: '🛍️',  id: 'section-shop' },
-          { label: 'Suggest Reward',  icon: '💭',  id: 'section-suggest' },
-          { label: 'Mood Tracker',    icon: '😊',  id: 'section-mood' },
-        ].map(({ label, icon, id }) => (
+          { label: 'Quests',          id: 'section-quests' },
+          { label: 'Side Quests',     id: 'section-sideQuests' },
+          { label: 'Routine Tracker', id: 'section-routines' },
+          { label: 'Rewards Shop',    id: 'section-shop' },
+          { label: 'Suggest Reward',  id: 'section-suggest' },
+          { label: 'Mood Tracker',    id: 'section-mood' },
+        ].map(({ label, id }) => (
           <button
             key={id}
             onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
               whiteSpace: 'nowrap',
               background: 'none',
               border: 'none',
-              borderBottom: `2.5px solid transparent`,
+              borderBottom: '2.5px solid transparent',
               padding: '12px 6px 10px',
               cursor: 'pointer',
               fontFamily: "'Hanken Grotesk', sans-serif",
@@ -664,7 +661,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
             onMouseEnter={e => { e.currentTarget.style.color = child.theme.accent; e.currentTarget.style.borderBottomColor = child.theme.accent }}
             onMouseLeave={e => { e.currentTarget.style.color = '#9a8fa6'; e.currentTarget.style.borderBottomColor = 'transparent' }}
           >
-            <span style={{ fontSize: 15 }}>{icon}</span> {label}
+            {label}
           </button>
         ))}
       </div>
