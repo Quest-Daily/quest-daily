@@ -621,8 +621,56 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         </div>
       )}
 
+      {/* Quick-nav strip */}
+      <div style={{
+        background: '#fff',
+        borderBottom: '1px solid #ede6e0',
+        padding: '0 16px',
+        display: 'flex',
+        gap: 8,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+      }}>
+        {[
+          { label: 'Quests',          icon: '⚔️',  id: 'section-quests' },
+          { label: 'Side Quests',     icon: '⭐',  id: 'section-sideQuests' },
+          { label: 'Routine Tracker', icon: '⏰',  id: 'section-routines' },
+          { label: 'Rewards Shop',    icon: '🛍️',  id: 'section-shop' },
+          { label: 'Suggest Reward',  icon: '💭',  id: 'section-suggest' },
+          { label: 'Mood Tracker',    icon: '😊',  id: 'section-mood' },
+        ].map(({ label, icon, id }) => (
+          <button
+            key={id}
+            onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              whiteSpace: 'nowrap',
+              background: 'none',
+              border: 'none',
+              borderBottom: `2.5px solid transparent`,
+              padding: '12px 6px 10px',
+              cursor: 'pointer',
+              fontFamily: "'Hanken Grotesk', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#9a8fa6',
+              transition: 'color 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = child.theme.accent; e.currentTarget.style.borderBottomColor = child.theme.accent }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#9a8fa6'; e.currentTarget.style.borderBottomColor = 'transparent' }}
+          >
+            <span style={{ fontSize: 15 }}>{icon}</span> {label}
+          </button>
+        ))}
+      </div>
+
       {/* Quest section */}
-      <div style={{ padding: '38px 44px 10px' }}>
+      <div id="section-quests" style={{ padding: '38px 44px 10px' }}>
         {/* Day-part tabs */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 22, flexWrap: 'wrap' }}>
           {DAY_PARTS.map(part => (
@@ -762,8 +810,104 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         </div>
       </div>
 
+      {/* Side quests — moved here so kids see them right after daily quests */}
+      <div id="section-sideQuests" style={{
+        background: '#faf0ec',
+        padding: '44px 48px 48px',
+        textAlign: 'center',
+        marginTop: 16,
+      }}>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, color: '#3a3340' }}>Side quests</h2>
+        <div style={{
+          fontFamily: "'Space Mono', monospace",
+          fontSize: 13,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: child.theme.accent,
+          margin: '14px 0 26px',
+        }}>Extra jobs · extra tickets</div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: 22,
+        }}>
+          {SIDE_QUESTS.map(sq => {
+            const claimed = state.claimedSideQuests.includes(sq.id)
+            return (
+              <div
+                key={sq.id}
+                style={{
+                  filter: claimed
+                    ? 'drop-shadow(0 3px 4px rgba(58,51,64,.08))'
+                    : 'drop-shadow(0 9px 11px rgba(58,51,64,.16))',
+                  opacity: claimed ? 0.6 : 1,
+                  transition: 'opacity 0.3s, filter 0.3s',
+                }}
+              >
+                <TicketShape bg={sq.bg} stubHeight={64}>
+                  <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 34 }}>{sq.icon}</div>
+                    <div style={{
+                      fontFamily: "'DM Serif Display', serif",
+                      fontSize: 22,
+                      color: '#3a3340',
+                      margin: '10px 0 14px',
+                    }}>{sq.title}</div>
+                    <div style={{
+                      display: 'inline-block',
+                      background: '#fff',
+                      color: sq.textColor,
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: 12,
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                    }}>{sq.tickets} TICKETS</div>
+                  </div>
+                  <div style={{
+                    height: 64,
+                    borderTop: `2px dashed ${sq.dashed}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {claimed ? (
+                      <div style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: 13,
+                        color: '#9a8fa6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}>✓ Claimed</div>
+                    ) : (
+                      <button
+                        onClick={() => claimSideQuest(sq.id)}
+                        className="press-btn"
+                        style={{
+                          background: sq.bg,
+                          color: sq.textColor,
+                          fontFamily: "'Space Mono', monospace",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          letterSpacing: '0.06em',
+                          padding: '10px 22px',
+                          borderRadius: 999,
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontFamily: "'Hanken Grotesk', sans-serif",
+                        }}
+                      >Claim</button>
+                    )}
+                  </div>
+                </TicketShape>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Daily routines */}
-      <div style={{ padding: '34px 44px 10px' }}>
+      <div id="section-routines" style={{ padding: '34px 44px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: '#3a3340' }}>Daily routines</h2>
           <div style={{
@@ -904,7 +1048,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
       </div>
 
       {/* Shop + Suggest a reward */}
-      <div style={{ padding: '30px 44px 8px' }}>
+      <div id="section-shop" style={{ padding: '30px 44px 8px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 22 }}>
           <div style={{
             background: '#f7d6dd',
@@ -935,7 +1079,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
             }} onClick={onOpenShop}>Open →</button>
           </div>
 
-          <div style={{
+          <div id="section-suggest" style={{
             background: child.theme.bg,
             borderRadius: 22,
             padding: '24px 26px',
@@ -967,7 +1111,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
       </div>
 
       {/* Mood check-in */}
-      <div style={{ padding: '34px 48px 8px' }}>
+      <div id="section-mood" style={{ padding: '34px 48px 8px' }}>
         <div style={{
           background: '#fff',
           borderRadius: 22,
@@ -1062,100 +1206,6 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
         </div>
       </div>
 
-      {/* Side quests */}
-      <div style={{
-        background: '#faf0ec',
-        padding: '44px 48px 60px',
-        textAlign: 'center',
-        marginTop: 32,
-      }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, color: '#3a3340' }}>Side quests</h2>
-        <div style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: 13,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: child.theme.accent,
-          margin: '14px 0 26px',
-        }}>Extra jobs · extra tickets</div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: 22,
-        }}>
-          {SIDE_QUESTS.map(sq => {
-            const claimed = state.claimedSideQuests.includes(sq.id)
-            return (
-              <div
-                key={sq.id}
-                style={{
-                  filter: claimed
-                    ? 'drop-shadow(0 3px 4px rgba(58,51,64,.08))'
-                    : 'drop-shadow(0 9px 11px rgba(58,51,64,.16))',
-                  opacity: claimed ? 0.6 : 1,
-                  transition: 'opacity 0.3s, filter 0.3s',
-                }}
-              >
-                <TicketShape bg={sq.bg} stubHeight={64}>
-                  <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 34 }}>{sq.icon}</div>
-                    <div style={{
-                      fontFamily: "'DM Serif Display', serif",
-                      fontSize: 22,
-                      color: '#3a3340',
-                      margin: '10px 0 14px',
-                    }}>{sq.title}</div>
-                    <div style={{
-                      display: 'inline-block',
-                      background: '#fff',
-                      color: sq.textColor,
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: 12,
-                      padding: '6px 12px',
-                      borderRadius: 999,
-                    }}>{sq.tickets} TICKETS</div>
-                  </div>
-                  <div style={{
-                    height: 64,
-                    borderTop: `2px dashed ${sq.dashed}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    {claimed ? (
-                      <div style={{
-                        fontFamily: "'Space Mono', monospace",
-                        fontSize: 13,
-                        color: '#9a8fa6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}>✓ Claimed</div>
-                    ) : (
-                      <button
-                        onClick={() => claimSideQuest(sq.id)}
-                        className="press-btn"
-                        style={{
-                          background: '#3a3340',
-                          color: '#fff',
-                          fontWeight: 600,
-                          fontSize: 14,
-                          padding: '9px 30px',
-                          borderRadius: 999,
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontFamily: "'Hanken Grotesk', sans-serif",
-                        }}
-                      >Claim</button>
-                    )}
-                  </div>
-                </TicketShape>
-              </div>
-            )
-          })}
-        </div>
-      </div>
     </div>
   )
 }
