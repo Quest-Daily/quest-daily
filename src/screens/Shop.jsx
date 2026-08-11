@@ -65,6 +65,7 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
       fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#1a1a2e',
     }}>
+      <style>{`.shop-grid{grid-template-columns:repeat(3,1fr)}@media(min-width:600px){.shop-grid{grid-template-columns:repeat(4,1fr)}}`}</style>
 
       {/* Hero — back button + centered title + icon buttons all in one dark banner */}
       <div style={{
@@ -208,10 +209,9 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
             <div style={{ fontSize: 15 }}>Ask a parent to add rewards, or suggest something below!</div>
           </div>
         ) : (
-          <div style={{
+          <div className="shop-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 14,
+            gap: 12,
             marginBottom: 28,
           }}>
             {filtered.map((item, idx) => {
@@ -228,67 +228,64 @@ export default function Shop({ childId, state, onUpdate, onBack, onSuggest }) {
                     transition: 'opacity 0.2s',
                   }}
                 >
-                  {/* Image zone — portrait dashed-border zone, Kidstuff style */}
+                  {/* Image zone */}
                   <div style={{
                     background: tint,
-                    borderRadius: 18,
-                    border: isConfirming
-                      ? `2px solid ${child.theme.accent}`
-                      : `2px dashed ${child.theme.dashed}`,
+                    borderRadius: 16,
+                    border: isConfirming ? `2px solid ${child.theme.accent}` : 'none',
                     aspectRatio: '1 / 1.1',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    position: 'relative',
                     overflow: 'hidden',
-                    marginBottom: 10,
+                    marginBottom: 8,
                     transition: 'border-color 0.15s',
                   }}>
                     {item.photo ? (
                       <img src={item.photo} alt={item.title}
-                        style={{ width: '75%', height: '75%', objectFit: 'contain' }} />
+                        style={{ width: '72%', height: '72%', objectFit: 'contain' }} />
                     ) : (
-                      <div style={{ fontSize: 72, lineHeight: 1 }}>{item.icon}</div>
+                      <div style={{ fontSize: 46, lineHeight: 1 }}>{item.icon}</div>
                     )}
                   </div>
 
-                  {/* Text below the image zone */}
+                  {/* Text below */}
                   <div style={{ padding: '0 2px' }}>
                     {item.category && (
                       <div style={{
                         fontFamily: "'Space Mono', monospace",
-                        fontSize: 8,
+                        fontSize: 7,
                         color: child.theme.textMuted,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.12em',
-                        marginBottom: 4,
+                        letterSpacing: '0.13em',
+                        marginBottom: 3,
                       }}>{item.category}</div>
                     )}
 
                     <div style={{
-                      fontFamily: "'Nunito', sans-serif",
-                      fontWeight: 800,
-                      fontSize: 14,
+                      fontFamily: "'Hanken Grotesk', sans-serif",
+                      fontWeight: 400,
+                      fontSize: 11,
                       color: '#1a1a2e',
-                      lineHeight: 1.25,
-                      marginBottom: 6,
+                      lineHeight: 1.3,
+                      marginBottom: 4,
                     }}>{item.title}</div>
 
                     {!isConfirming ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{
-                          fontFamily: "'Nunito', sans-serif",
-                          fontWeight: 800,
-                          fontSize: 16,
-                          color: canAfford ? '#3d8c4a' : '#9a8fa6',
-                        }}>🎟 {item.ticketPrice}</span>
+                      <div>
+                        <div style={{
+                          fontFamily: "'Space Mono', monospace",
+                          fontWeight: 400,
+                          fontSize: 10,
+                          color: canAfford ? child.theme.accent : '#b0a0bf',
+                        }}>{item.ticketPrice} tickets</div>
                         {!canAfford && (
-                          <span style={{
-                            fontFamily: "'Nunito', sans-serif",
-                            fontSize: 10,
-                            fontWeight: 700,
-                            color: '#b5546a',
-                          }}>need {item.ticketPrice - tickets} more</span>
+                          <div style={{
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: 8,
+                            color: '#c0a0a0',
+                            marginTop: 1,
+                          }}>need {item.ticketPrice - tickets} more</div>
                         )}
                       </div>
                     ) : (
