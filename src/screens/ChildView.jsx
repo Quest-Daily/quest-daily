@@ -780,10 +780,10 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                   transition: 'background 0.25s, border 0.25s',
                 }}>{done ? '✓' : ''}</div>
 
-                <div style={{ opacity: done ? 0.5 : 1, transition: 'opacity 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 72 }}>
+                <div style={{ opacity: done ? 0.5 : 1, transition: 'opacity 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 96 }}>
                   {resolveQuestImage(quest.id, quest.imageKey)
-                    ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt={quest.title} style={{ width: 72, height: 72, objectFit: 'contain' }} />
-                    : <span style={{ fontSize: 38 }}>{quest.icon}</span>
+                    ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt={quest.title} style={{ width: 96, height: 96, objectFit: 'contain' }} />
+                    : <span style={{ fontSize: 46 }}>{quest.icon}</span>
                   }
                 </div>
                 <div style={{
@@ -846,10 +846,10 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
               >
                 <TicketShape bg={sq.bg} stubHeight={64}>
                   <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 64 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 84 }}>
                       {resolveQuestImage(sq.id, sq.imageKey)
-                        ? <img src={resolveQuestImage(sq.id, sq.imageKey)} alt={sq.title} style={{ width: 64, height: 64, objectFit: 'contain' }} />
-                        : <span style={{ fontSize: 34 }}>{sq.icon}</span>
+                        ? <img src={resolveQuestImage(sq.id, sq.imageKey)} alt={sq.title} style={{ width: 84, height: 84, objectFit: 'contain' }} />
+                        : <span style={{ fontSize: 40 }}>{sq.icon}</span>
                       }
                     </div>
                     <div style={{
