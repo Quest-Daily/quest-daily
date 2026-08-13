@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { CHILDREN, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
-import { QUEST_IMAGES } from '../assets/quests/index'
+import { resolveQuestImage } from '../assets/quests/index'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
@@ -781,8 +781,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                 }}>{done ? '✓' : ''}</div>
 
                 <div style={{ opacity: done ? 0.5 : 1, transition: 'opacity 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 72 }}>
-                  {QUEST_IMAGES[quest.id]
-                    ? <img src={QUEST_IMAGES[quest.id]} alt={quest.title} style={{ width: 72, height: 72, objectFit: 'contain' }} />
+                  {resolveQuestImage(quest.id, quest.imageKey)
+                    ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt={quest.title} style={{ width: 72, height: 72, objectFit: 'contain' }} />
                     : <span style={{ fontSize: 38 }}>{quest.icon}</span>
                   }
                 </div>
@@ -847,8 +847,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                 <TicketShape bg={sq.bg} stubHeight={64}>
                   <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 64 }}>
-                      {QUEST_IMAGES[sq.id]
-                        ? <img src={QUEST_IMAGES[sq.id]} alt={sq.title} style={{ width: 64, height: 64, objectFit: 'contain' }} />
+                      {resolveQuestImage(sq.id, sq.imageKey)
+                        ? <img src={resolveQuestImage(sq.id, sq.imageKey)} alt={sq.title} style={{ width: 64, height: 64, objectFit: 'contain' }} />
                         : <span style={{ fontSize: 34 }}>{sq.icon}</span>
                       }
                     </div>
@@ -946,8 +946,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 26, flexShrink: 0,
                   }}>
-                    {QUEST_IMAGES[routine.id]
-                      ? <img src={QUEST_IMAGES[routine.id]} alt={routine.title} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                    {resolveQuestImage(routine.id, routine.imageKey)
+                      ? <img src={resolveQuestImage(routine.id, routine.imageKey)} alt={routine.title} style={{ width: 40, height: 40, objectFit: 'contain' }} />
                       : routine.icon
                     }
                   </div>

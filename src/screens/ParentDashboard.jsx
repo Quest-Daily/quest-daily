@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { CHILDREN, CHILD_ORDER, DEFAULT_SHOP_ITEMS } from '../data'
 import Avatar from '../components/Avatar'
 import { useLocalStorage } from '../hooks'
+import { ALL_QUEST_IMAGES, resolveQuestImage } from '../assets/quests/index'
 
 export default function ParentDashboard({ childState, quests, onUpdateQuests, onUpdate, onBack, onResetState }) {
   const [ticketValue, setTicketValue] = useLocalStorage('quest-daily-ticket-value', 0.50)
@@ -538,7 +539,10 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
                 padding: '11px 0',
                 borderBottom: '1px solid #f4eef7',
               }}>
-                <span style={{ fontSize: 20, width: 26, textAlign: 'center', flexShrink: 0 }}>{quest.icon}</span>
+                {resolveQuestImage(quest.id, quest.imageKey)
+                  ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt="" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
+                  : <span style={{ fontSize: 20, width: 32, textAlign: 'center', flexShrink: 0 }}>{quest.icon}</span>
+                }
                 <span style={{ flex: 1, fontSize: 14, color: '#3a3340' }}>{quest.title}</span>
                 <span style={{
                   fontFamily: "'Space Mono', monospace",
@@ -620,12 +624,18 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
   const [icon, setIcon] = useState(initial.icon)
   const [title, setTitle] = useState(initial.title)
   const [tickets, setTickets] = useState(initial.tickets)
+  const [imageKey, setImageKey] = useState(initial.imageKey ?? null)
+  const [showPicker, setShowPicker] = useState(false)
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!title.trim()) return
-    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)) })
+    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)), imageKey: imageKey ?? undefined })
   }
+
+  const currentSrc = imageKey
+    ? ALL_QUEST_IMAGES.find(i => i.key === imageKey)?.src
+    : resolveQuestImage(initial.id, null)
 
   const inputStyle = {
     border: '1.5px solid #e0d4e8',
@@ -647,35 +657,114 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
         padding: '16px 18px',
         margin: '8px 0',
         display: 'flex',
-        flexWrap: 'wrap',
-        gap: 10,
-        alignItems: 'center',
+        flexDirection: 'column',
+        gap: 12,
       }}
     >
-      <input
-        value={icon}
-        onChange={e => setIcon(e.target.value)}
-        placeholder="⭐"
-        maxLength={2}
-        style={{ ...inputStyle, width: 52, textAlign: 'center', fontSize: 22, padding: '7px 6px' }}
-      />
-      <input
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        placeholder="Quest name"
-        autoFocus
-        style={{ ...inputStyle, flex: 1, minWidth: 160 }}
-      />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
         <input
-          type="number"
-          value={tickets}
-          onChange={e => setTickets(Number(e.target.value))}
-          min={1} max={10}
-          style={{ ...inputStyle, width: 54, textAlign: 'center' }}
+          value={icon}
+          onChange={e => setIcon(e.target.value)}
+          placeholder="⭐"
+          maxLength={2}
+          style={{ ...inputStyle, width: 52, textAlign: 'center', fontSize: 22, padding: '7px 6px' }}
         />
-        <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>tickets</span>
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Quest name"
+          autoFocus
+          style={{ ...inputStyle, flex: 1, minWidth: 160 }}
+        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <input
+            type="number"
+            value={tickets}
+            onChange={e => setTickets(Number(e.target.value))}
+            min={1} max={10}
+            style={{ ...inputStyle, width: 54, textAlign: 'center' }}
+          />
+          <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>tickets</span>
+        </div>
       </div>
+
+      {/* Image picker */}
+      <div>
+        <div style={{
+          fontFamily: "'Space Mono', monospace", fontSize: 10,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: '#9a8fa6', marginBottom: 8,
+        }}>Quest image</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 12,
+            background: '#fff', border: '1.5px solid #e0d4e8',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            {currentSrc
+              ? <img src={currentSrc} alt="" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+              : <span style={{ fontSize: 24 }}>{icon || '⭐'}</span>
+            }
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowPicker(v => !v)}
+            style={{
+              background: showPicker ? '#efe2f5' : '#fff',
+              border: '1.5px solid #d3bce6', borderRadius: 999,
+              padding: '7px 16px', fontSize: 13, fontWeight: 600,
+              color: '#a8689a', cursor: 'pointer',
+              fontFamily: "'Hanken Grotesk', sans-serif",
+            }}
+          >{showPicker ? 'Close' : '🖼️ Change image'}</button>
+          {imageKey && (
+            <button
+              type="button"
+              onClick={() => setImageKey(null)}
+              style={{
+                background: 'none', border: 'none', fontSize: 12,
+                color: '#b3a9be', cursor: 'pointer', padding: '4px 8px',
+              }}
+            >Reset to default</button>
+          )}
+        </div>
+
+        {showPicker && (
+          <div style={{
+            marginTop: 10,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+            gap: 8,
+            maxHeight: 260,
+            overflowY: 'auto',
+            padding: '4px 2px',
+          }}>
+            {ALL_QUEST_IMAGES.map(img => (
+              <button
+                key={img.key}
+                type="button"
+                onClick={() => { setImageKey(img.key); setShowPicker(false) }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  padding: '8px 4px',
+                  background: imageKey === img.key ? '#efe2f5' : '#fff',
+                  border: `1.5px solid ${imageKey === img.key ? '#a8689a' : '#e0d4e8'}`,
+                  borderRadius: 12, cursor: 'pointer',
+                  transition: 'border-color 0.15s, background 0.15s',
+                }}
+              >
+                <img src={img.src} alt={img.label} style={{ width: 44, height: 44, objectFit: 'contain' }} />
+                <span style={{
+                  fontFamily: "'Space Mono', monospace", fontSize: 8,
+                  color: imageKey === img.key ? '#a8689a' : '#9a8fa6',
+                  textAlign: 'center', lineHeight: 1.2,
+                }}>{img.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           type="submit"
