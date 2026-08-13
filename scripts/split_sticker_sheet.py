@@ -98,7 +98,7 @@ def keep_main_sticker(img):
     return Image.fromarray(arr)
 
 
-def tight_crop(img, pad=10):
+def tight_crop(img, pad=4):
     arr = np.array(img.convert("RGBA"))
     alpha = arr[..., 3]
     rows = np.any(alpha > 20, axis=1)
@@ -122,10 +122,11 @@ def to_512(img):
     return canvas.resize((512, 512), Image.LANCZOS)
 
 
-def save_sticker(cell_img, name, out_dir, label_frac=0.42, margin=4):
-    # Strip filename label text at the bottom and add inward margin to stop edge bleed
+def save_sticker(cell_img, name, out_dir, label_frac=0.20, margin=4, top_skip=6):
+    # Skip a few px at top (avoids label bleed from the row above)
+    # Strip bottom label text, add left/right margin to stop side bleed
     label_px = int(cell_img.height * label_frac)
-    art = cell_img.crop((margin, 0, cell_img.width - margin, cell_img.height - label_px))
+    art = cell_img.crop((margin, top_skip, cell_img.width - margin, cell_img.height - label_px))
     sticker = remove_bg(art)
     sticker = keep_main_sticker(sticker)  # drop stray adjacent-cell bleed
     sticker = tight_crop(sticker)
