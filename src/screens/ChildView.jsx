@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES, DAYS_OF_WEEK, DAY_FULL_LABELS } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { resolveQuestImage } from '../assets/quests/index'
@@ -215,6 +215,19 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     }
     setSelected(null)
   }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (!selected) return
+      if (e.key !== 'Backspace' && e.key !== 'Delete') return
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      deleteSelected()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selected])
 
   function popTickets() {
     setTicketPop(true)
@@ -514,7 +527,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
           minHeight: 380,
           padding: '70px 0 50px',
           textAlign: 'center',
-          overflow: 'hidden',
+          overflow: selected ? 'visible' : 'hidden',
           touchAction: dragState ? 'none' : 'auto',
           userSelect: 'none',
         }}
