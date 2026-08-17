@@ -41,6 +41,11 @@ import soccerBag from '../soccer-bag.png'
 import vegemiteToast from '../vegemite-toast.png'
 import lunchbox2 from '../lunchbox-2.png'
 import makeBed2 from '../make-bed-2.png'
+import sportUniformPastel from '../sport_uniform_pastel.png'
+import toothbrush from '../toothbrush.png'
+import weetbix from '../weetbix.png'
+import jamToast from '../jam-toast.png'
+import wpsUniform from '../WPS_normal_uniform.png'
 
 // Reward stickers
 import soccerTraining from '../soccer-training.png'
@@ -143,6 +148,11 @@ export const ALL_QUEST_IMAGES = [
   { key: 'vegemite-toast',           src: vegemiteToast,            label: 'Vegemite toast' },
   { key: 'lunchbox-2',               src: lunchbox2,                label: 'Lunchbox' },
   { key: 'make-bed-2',               src: makeBed2,                 label: 'Make bed 2' },
+  { key: 'sport-uniform-pastel',     src: sportUniformPastel,       label: 'Sports uniform' },
+  { key: 'toothbrush',               src: toothbrush,               label: 'Toothbrush' },
+  { key: 'weetbix',                  src: weetbix,                  label: 'Weetbix' },
+  { key: 'jam-toast',                src: jamToast,                 label: 'Jam toast' },
+  { key: 'wps-uniform',              src: wpsUniform,               label: 'WPS uniform' },
   // Rewards
   { key: 'soccer-training',           src: soccerTraining,           label: 'Soccer training' },
   { key: 'soccer-game',               src: soccerGame,               label: 'Soccer game' },
