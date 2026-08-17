@@ -178,31 +178,26 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
 
   function acknowledgeNote(idx, buttonEl) {
     const note = headerNotes[idx]
-    if (!note) return
+    if (!note || note.acknowledged) return
 
     // Confetti from the button
     const btnRect = buttonEl.getBoundingClientRect()
     spawnConfetti(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2)
 
-    // Scrunch the note element using its current transform as the base
+    // Little happy bounce — note stays
     const noteEl = noteRefs.current[note.id]
     if (noteEl) {
       const base = noteEl.style.transform
       noteEl.animate([
-        { transform: base,                                                            offset: 0    },
-        { transform: `${base} scale(1.08)`,                                           offset: 0.08 },
-        { transform: `${base} scale(0.92) skewX(9deg)  skewY(3deg)`,                 offset: 0.22 },
-        { transform: `${base} scale(0.78) skewX(-11deg) skewY(-5deg) rotate(8deg)`,  offset: 0.40 },
-        { transform: `${base} scale(0.55) skewX(7deg)  skewY(4deg)  rotate(-14deg)`, offset: 0.58 },
-        { transform: `${base} scale(0.30) rotate(22deg)`,                             offset: 0.76 },
-        { transform: `${base} scale(0)   rotate(-30deg)`, opacity: 0,                offset: 1    },
-      ], { duration: 680, easing: 'ease-in', fill: 'forwards' })
+        { transform: base },
+        { transform: `${base} scale(1.1) rotate(3deg)`,  offset: 0.25 },
+        { transform: `${base} scale(1.05) rotate(-2deg)`, offset: 0.55 },
+        { transform: `${base} scale(1.02) rotate(1deg)`,  offset: 0.78 },
+        { transform: base },
+      ], { duration: 420, easing: 'ease-out' })
     }
 
-    // Remove from state once animation finishes
-    setTimeout(() => {
-      onUpdate(s => ({ ...s, notePositions: (s.notePositions || []).filter(n => n.id !== note.id) }))
-    }, 670)
+    updateNoteAt(idx, { acknowledged: true })
   }
 
   function deleteSelected() {
@@ -466,27 +461,37 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                     minHeight: Math.round(100 * scale),
                     cursor: isSel ? 'text' : 'grab',
                     pointerEvents: isSel ? 'auto' : 'none',
+                    textDecoration: note.acknowledged ? 'line-through' : 'none',
+                    textDecorationColor: 'rgba(107, 90, 60, 0.5)',
+                    textDecorationThickness: '1.5px',
                   }}
                 />
               </div>
 
-              {/* Acknowledge button — always visible to kids */}
-              <button
+              {/* Got it! button — hidden once acknowledged */}
+              {!note.acknowledged && (
+                <button
                   onPointerDown={e => e.stopPropagation()}
                   onClick={e => { e.stopPropagation(); acknowledgeNote(idx, e.currentTarget) }}
                   style={{
-                    position: 'absolute', bottom: -16, left: '50%',
+                    position: 'absolute', bottom: -18, left: '50%',
                     transform: 'translateX(-50%)',
-                    width: 32, height: 32, borderRadius: '50%',
-                    background: '#5b8a5c', color: '#fff',
-                    border: '3px solid #fff',
-                    cursor: 'pointer', fontSize: 16,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    whiteSpace: 'nowrap',
+                    padding: `${Math.round(5 * scale)}px ${Math.round(14 * scale)}px`,
+                    borderRadius: 999,
+                    background: child.theme.accent,
+                    color: '#fff',
+                    border: '2.5px solid #fff',
+                    cursor: 'pointer',
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: Math.round(11 * scale),
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
                     zIndex: 20,
-                    boxShadow: '0 2px 10px rgba(91,138,92,0.45)',
-                    lineHeight: 1,
+                    boxShadow: `0 2px 10px ${child.theme.shadow}`,
                   }}
-                >✓</button>
+                >Got it!</button>
+              )}
 
               {isSel && (
                 <>
