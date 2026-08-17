@@ -37,6 +37,10 @@ import helpUnpackGroceries from '../help-unpack-groceries.png'
 import helpCookDinner from '../help-cook-dinner.png'
 import exercise from '../exercise.png'
 import helpInGarden from '../help-in-garden.png'
+import soccerBag from '../soccer-bag.png'
+import vegemiteToast from '../vegemite-toast.png'
+import lunchbox2 from '../lunchbox-2.png'
+import makeBed2 from '../make-bed-2.png'
 
 // Reward stickers
 import soccerTraining from '../soccer-training.png'
@@ -135,6 +139,10 @@ export const ALL_QUEST_IMAGES = [
   { key: 'help-cook-dinner',          src: helpCookDinner,           label: 'Cook dinner' },
   { key: 'exercise',                   src: exercise,                 label: 'Exercise' },
   { key: 'help-in-garden',            src: helpInGarden,             label: 'Help in garden' },
+  { key: 'soccer-bag',               src: soccerBag,                label: 'Soccer bag' },
+  { key: 'vegemite-toast',           src: vegemiteToast,            label: 'Vegemite toast' },
+  { key: 'lunchbox-2',               src: lunchbox2,                label: 'Lunchbox' },
+  { key: 'make-bed-2',               src: makeBed2,                 label: 'Make bed 2' },
   // Rewards
   { key: 'soccer-training',           src: soccerTraining,           label: 'Soccer training' },
   { key: 'soccer-game',               src: soccerGame,               label: 'Soccer game' },
