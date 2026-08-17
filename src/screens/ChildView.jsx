@@ -971,6 +971,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   className="press-btn"
                   style={{
                     width: '100%',
+                    minHeight: 230,
                     position: 'relative',
                     background: done ? '#f6efe7' : '#fff',
                     borderRadius: 18,
