@@ -7,6 +7,26 @@ import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
 import { printQuestComplete, printQuestSheet } from '../utils/printer'
 
+function spawnConfetti(centerX, centerY) {
+  const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
+  const shapes = ['circle', 'rect', 'rect']
+  for (let i = 0; i < 48; i++) {
+    const el = document.createElement('div')
+    const color = colors[Math.floor(Math.random() * colors.length)]
+    const angle = Math.random() * Math.PI * 2
+    const dist = 90 + Math.random() * 140
+    const size = 7 + Math.random() * 10
+    const shape = shapes[Math.floor(Math.random() * shapes.length)]
+    el.style.cssText = `position:fixed;left:${centerX}px;top:${centerY}px;width:${size}px;height:${shape === 'circle' ? size : size * 1.6}px;background:${color};border-radius:${shape === 'circle' ? '50%' : '3px'};pointer-events:none;z-index:9999;`
+    document.body.appendChild(el)
+    const anim = el.animate([
+      { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0.15) rotate(${(Math.random() - 0.5) * 900}deg)`, opacity: 0 },
+    ], { duration: 1100 + Math.random() * 700, easing: 'cubic-bezier(0,.9,.57,1)', fill: 'forwards' })
+    anim.onfinish = () => el.remove()
+  }
+}
+
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
 const NOTE_COLORS = ['#fae7c4', '#fde8ef', '#d8e6f5', '#e7f0e4']
@@ -153,6 +173,12 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
       notePositions: [...(s.notePositions || []), { id: `note-${Date.now()}`, x: 50, y: 50, scale: 1, rotate: -1, text: 'Tap to edit...', color }]
     }))
     setSelected({ type: 'note', idx: headerNotes.length })
+  }
+
+  function acknowledgeNote(idx, buttonEl) {
+    updateNoteAt(idx, { acknowledged: true })
+    const rect = buttonEl.getBoundingClientRect()
+    spawnConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2)
   }
 
   function deleteSelected() {
@@ -415,9 +441,50 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                     minHeight: Math.round(100 * scale),
                     cursor: isSel ? 'text' : 'grab',
                     pointerEvents: isSel ? 'auto' : 'none',
+                    opacity: note.acknowledged ? 0.55 : 1,
                   }}
                 />
+                {/* Acknowledged overlay */}
+                {note.acknowledged && (
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: 3,
+                    background: 'rgba(91,138,92,0.12)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    pointerEvents: 'none',
+                  }}>
+                    <div style={{
+                      width: Math.round(48 * scale), height: Math.round(48 * scale),
+                      borderRadius: '50%',
+                      background: '#5b8a5c',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: Math.round(24 * scale),
+                      color: '#fff',
+                      boxShadow: '0 2px 10px rgba(91,138,92,0.4)',
+                    }}>✓</div>
+                  </div>
+                )}
               </div>
+
+              {/* Acknowledge button — always visible to kids */}
+              {!note.acknowledged && (
+                <button
+                  onPointerDown={e => e.stopPropagation()}
+                  onClick={e => { e.stopPropagation(); acknowledgeNote(idx, e.currentTarget) }}
+                  style={{
+                    position: 'absolute', bottom: -16, left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: '#5b8a5c', color: '#fff',
+                    border: '3px solid #fff',
+                    cursor: 'pointer', fontSize: 16,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 20,
+                    boxShadow: '0 2px 10px rgba(91,138,92,0.45)',
+                    lineHeight: 1,
+                  }}
+                >✓</button>
+              )}
+
               {isSel && (
                 <>
                   <DeleteBtn onDelete={deleteSelected} />
