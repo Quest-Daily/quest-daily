@@ -96,7 +96,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [dragState, setDragState] = useState(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
-  const [viewingDay, setViewingDay] = useState(null) // null = today, or a day key like 'mon'
+  const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
+  const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
   const [questDragState, setQuestDragState] = useState(null) // { questId, section, displayOrder }
   const headerRef = useRef(null)
   const movedRef = useRef(false)
@@ -235,9 +236,11 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     setTimeout(() => setTicketPop(false), 450)
   }
 
-  const todayKey = (() => {
-    const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-    return keys[new Date().getDay()]
+  const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+  const todayKey = DAY_KEYS[new Date().getDay()]
+  const todayISO = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
   })()
 
   function questMatchesToday(q) {
@@ -253,18 +256,19 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     return true
   }
 
-  function questMatchesDay(q, dayKey) {
+  function questMatchesDate(q, dateISO) {
+    const d = new Date((dateISO || todayISO) + 'T00:00:00')
+    const dk = DAY_KEYS[d.getDay()]
     const rec = q.recurrence || 'daily'
-    if (rec === 'weekly') return (q.days || []).includes(dayKey)
-    // once/monthly can only be previewed on today (we don't know future dates)
-    if (rec === 'once' || rec === 'monthly') return dayKey === todayKey ? questMatchesToday(q) : false
+    if (rec === 'weekly') return (q.days || []).includes(dk)
+    if (rec === 'monthly') return d.getDate() === q.dayOfMonth
+    if (rec === 'once') return q.date === (dateISO || todayISO)
     return true
   }
 
   function enabledQuests(part) {
     const disabled = state.disabledQuests || []
-    const dayKey = viewingDay || todayKey
-    return (quests[part] || []).filter(q => !disabled.includes(q.id) && questMatchesDay(q, dayKey))
+    return (quests[part] || []).filter(q => !disabled.includes(q.id) && questMatchesDate(q, viewingDay))
   }
 
   function handleAddQuest({ sections, icon, title, tickets, imageKey, selectedKids, recurrence, days, dayOfMonth, date }) {
@@ -717,66 +721,89 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
           )
         })}
 
-        {/* Calendar + add buttons strip — pinned to bottom of noticeboard */}
-        <div
-          onClick={e => e.stopPropagation()}
-          onPointerDown={e => e.stopPropagation()}
-          style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            zIndex: 8,
-            background: 'rgba(255,253,249,0.9)',
-            backdropFilter: 'blur(8px)',
-            borderTop: '1px solid rgba(211,188,230,0.3)',
-            padding: '7px 12px',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}
-        >
-          {/* Day picker */}
-          <div style={{ display: 'flex', gap: 3, flex: 1 }}>
-            {DAYS_OF_WEEK.map(day => {
-              const isToday = day === todayKey
-              const activeDay = viewingDay || todayKey
-              const isActive = activeDay === day
-              return (
-                <button
-                  key={day}
-                  onClick={() => setViewingDay(day === todayKey ? null : viewingDay === day ? null : day)}
-                  style={{
-                    flex: 1, padding: '6px 2px',
-                    borderRadius: 8,
-                    border: isActive && !isToday ? `2px solid ${child.theme.accent}` : '2px solid transparent',
-                    background: isToday ? child.theme.accent : isActive ? child.theme.bg : 'transparent',
-                    color: isToday ? '#fff' : isActive ? child.theme.accent : '#9a8fa6',
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: 9, fontWeight: isActive ? 700 : 400,
-                    cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center',
-                  }}
-                >{DAY_LABELS[day][0]}</button>
-              )
-            })}
-          </div>
-          {/* Divider */}
-          <div style={{ width: 1, height: 24, background: 'rgba(211,188,230,0.5)', flexShrink: 0 }} />
-          {/* Add note / sticker */}
-          <button
-            onClick={addNote}
-            style={{
-              background: 'none', border: 'none', padding: '4px 6px',
-              fontSize: 16, cursor: 'pointer', flexShrink: 0,
-            }}
-            title="Add note"
-          >📝</button>
-          <button
-            onClick={() => setShowStickerPicker('add')}
-            style={{
-              background: 'none', border: 'none', padding: '4px 6px',
-              fontSize: 16, cursor: 'pointer', flexShrink: 0,
-            }}
-            title="Add sticker"
-          >⭐</button>
-        </div>
+        {/* Wall calendar — hanging on the noticeboard */}
+        {(() => {
+          const { year, month } = calMonth
+          const firstDay = new Date(year, month, 1).getDay()
+          const daysInMonth = new Date(year, month + 1, 0).getDate()
+          const monthName = new Date(year, month).toLocaleString('default', { month: 'long' })
+          const cells = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)]
+          const prevMonth = () => setCalMonth(({ year, month }) => { const d = new Date(year, month - 1); return { year: d.getFullYear(), month: d.getMonth() } })
+          const nextMonth = () => setCalMonth(({ year, month }) => { const d = new Date(year, month + 1); return { year: d.getFullYear(), month: d.getMonth() } })
+          return (
+            <div
+              onClick={e => e.stopPropagation()}
+              onPointerDown={e => e.stopPropagation()}
+              style={{ position: 'absolute', top: 64, right: 10, zIndex: 7, width: 168 }}
+            >
+              {/* Hanging cord */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 52, marginBottom: 0 }}>
+                {[0, 1].map(i => (
+                  <div key={i} style={{ width: 2, height: 12, background: '#b8a8c8', borderRadius: 1 }} />
+                ))}
+              </div>
+              {/* Calendar card */}
+              <div style={{ background: '#fffdf8', borderRadius: 10, boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden' }}>
+                {/* Binding rings */}
+                <div style={{ background: child.theme.accent, padding: '5px 10px', display: 'flex', justifyContent: 'space-around' }}>
+                  {[0,1,2,3].map(i => (
+                    <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(255,255,255,0.4)' }} />
+                  ))}
+                </div>
+                {/* Month navigation */}
+                <div style={{ background: child.theme.bg, padding: '5px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: child.theme.accent, fontSize: 16, padding: '0 4px', lineHeight: 1, fontWeight: 700 }}>‹</button>
+                  <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 13, color: child.theme.accent }}>
+                    {monthName}{year !== new Date().getFullYear() ? ` ${year}` : ''}
+                  </span>
+                  <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: child.theme.accent, fontSize: 16, padding: '0 4px', lineHeight: 1, fontWeight: 700 }}>›</button>
+                </div>
+                {/* Day grid */}
+                <div style={{ padding: '4px 5px 6px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 1 }}>
+                    {['S','M','T','W','T','F','S'].map((d, i) => (
+                      <div key={i} style={{ textAlign: 'center', fontSize: 7, color: '#b3a9be', fontFamily: "'Space Mono', monospace", padding: '1px 0' }}>{d}</div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
+                    {cells.map((day, i) => {
+                      if (!day) return <div key={i} />
+                      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                      const isToday = dateStr === todayISO
+                      const isSelected = dateStr === viewingDay
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setViewingDay((isSelected || (isToday && !viewingDay)) ? null : dateStr)}
+                          style={{
+                            textAlign: 'center', padding: '3px 1px', borderRadius: 4, border: 'none',
+                            background: isToday ? child.theme.accent : isSelected ? child.theme.bg : 'transparent',
+                            color: isToday ? '#fff' : isSelected ? child.theme.accent : '#5a5060',
+                            fontFamily: "'Space Mono', monospace",
+                            fontSize: 8, fontWeight: isToday || isSelected ? 700 : 400,
+                            cursor: 'pointer', lineHeight: 1.5,
+                          }}
+                        >{day}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
-        {/* (Note/Sticker buttons moved into calendar strip below) */}
+        {/* Add note / sticker buttons */}
+        <div style={{ position: 'absolute', bottom: 12, right: 12, display: 'flex', gap: 7, zIndex: 8 }}>
+          <button
+            onClick={e => { e.stopPropagation(); addNote() }}
+            style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)', border: 'none', borderRadius: 999, padding: '7px 13px', fontSize: 12, fontFamily: "'Space Mono', monospace", color: '#6b5a3c', cursor: 'pointer', boxShadow: '0 2px 8px rgba(58,51,64,.12)' }}
+          >📝 Note</button>
+          <button
+            onClick={e => { e.stopPropagation(); setShowStickerPicker('add') }}
+            style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)', border: 'none', borderRadius: 999, padding: '7px 13px', fontSize: 12, fontFamily: "'Space Mono', monospace", color: child.theme.accent, cursor: 'pointer', boxShadow: '0 2px 8px rgba(58,51,64,.12)' }}
+          >⭐ Sticker</button>
+        </div>
 
         {/* Center identity */}
         <div style={{ position: 'relative', zIndex: 5, pointerEvents: 'none' }}>
@@ -968,7 +995,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
               background: viewingDay ? child.theme.bg : '#f6f0f9',
               padding: '3px 10px', borderRadius: 999,
             }}>
-              {viewingDay ? `${DAY_FULL_LABELS[viewingDay]} preview` : DAY_FULL_LABELS[todayKey]}
+              {viewingDay ? `${new Date(viewingDay + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'short' })} preview` : DAY_FULL_LABELS[todayKey]}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
