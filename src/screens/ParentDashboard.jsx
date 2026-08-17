@@ -475,11 +475,20 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
     }))
   }
 
-  function addQuest(section, { icon, title, tickets }) {
+  function addQuest(section, { icon, title, tickets, imageKey, selectedKids }) {
+    const newId = `q-${Date.now()}`
     onUpdateQuests(prev => ({
       ...prev,
-      [section]: [...prev[section], { id: `q-${Date.now()}`, icon, title, tickets }],
+      [section]: [...prev[section], { id: newId, icon, title, tickets, imageKey }],
     }))
+    CHILD_ORDER.forEach(id => {
+      if (!(selectedKids ?? CHILD_ORDER).includes(id)) {
+        onUpdate(id, s => ({
+          ...s,
+          disabledQuests: [...(s.disabledQuests || []), newId],
+        }))
+      }
+    })
     setAddingSection(null)
   }
 
@@ -626,11 +635,16 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
   const [tickets, setTickets] = useState(initial.tickets)
   const [imageKey, setImageKey] = useState(initial.imageKey ?? null)
   const [showPicker, setShowPicker] = useState(false)
+  const [selectedKids, setSelectedKids] = useState([...CHILD_ORDER])
+
+  function toggleKid(id) {
+    setSelectedKids(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id])
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!title.trim()) return
-    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)), imageKey: imageKey ?? undefined })
+    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)), imageKey: imageKey ?? undefined, selectedKids })
   }
 
   const currentSrc = imageKey
@@ -764,6 +778,45 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
           </div>
         )}
       </div>
+
+      {isNew && (
+        <div>
+          <div style={{
+            fontFamily: "'Space Mono', monospace", fontSize: 10,
+            letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: '#9a8fa6', marginBottom: 8,
+          }}>Assign to</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {CHILD_ORDER.map(id => {
+              const child = CHILDREN[id]
+              const sel = selectedKids.includes(id)
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleKid(id)}
+                  style={{
+                    flex: 1, padding: '10px 6px',
+                    borderRadius: 12,
+                    border: `1.5px solid ${sel ? child.theme.accent : '#e0d4e8'}`,
+                    background: sel ? child.theme.bg : '#fff',
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 700, color: sel ? child.theme.accent : '#b3a9be' }}>
+                    {child.name[0]}
+                  </span>
+                  <span style={{ fontSize: 11, color: sel ? child.theme.accent : '#9a8fa6' }}>
+                    {child.name}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button

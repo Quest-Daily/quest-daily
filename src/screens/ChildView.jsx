@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react'
-import { CHILDREN, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
+import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { resolveQuestImage } from '../assets/quests/index'
 import { useClock } from '../hooks'
 import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
 import { printQuestComplete, printQuestSheet } from '../utils/printer'
+import AddQuestModal from '../components/AddQuestModal'
 
 function spawnConfetti(centerX, centerY) {
   const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
@@ -86,7 +87,7 @@ function DeleteBtn({ onDelete }) {
   )
 }
 
-export default function ChildView({ childId, state, quests, onUpdate, onBack, onOpenShop, onSuggestReward }) {
+export default function ChildView({ childId, state, quests, onUpdate, onUpdateQuests, onUpdateChild, onBack, onOpenShop, onSuggestReward }) {
   const child = CHILDREN[childId]
   const clock = useClock()
   const [activeTab, setActiveTab] = useState('morning')
@@ -94,6 +95,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
   const [selected, setSelected] = useState(null)   // { type: 'sticker'|'note', idx }
   const [dragState, setDragState] = useState(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
+  const [showAddQuest, setShowAddQuest] = useState(false)
   const headerRef = useRef(null)
   const movedRef = useRef(false)
   const noteRefs = useRef({})
@@ -220,6 +222,23 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
     return (quests[part] || []).filter(q => !disabled.includes(q.id))
   }
 
+  function handleAddQuest({ section, icon, title, tickets, imageKey, selectedKids }) {
+    const newId = `q-${Date.now()}`
+    onUpdateQuests(prev => ({
+      ...prev,
+      [section]: [...(prev[section] || []), { id: newId, icon, title, tickets, imageKey }],
+    }))
+    CHILD_ORDER.forEach(id => {
+      if (!selectedKids.includes(id)) {
+        onUpdateChild(id, s => ({
+          ...s,
+          disabledQuests: [...(s.disabledQuests || []), newId],
+        }))
+      }
+    })
+    setShowAddQuest(false)
+  }
+
   function toggleQuest(dayPart, questId) {
     const quest = (quests[dayPart] || []).find(q => q.id === questId)
     if (!quest) return
@@ -322,6 +341,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
   const progressPct = totalCurrent ? (doneCurrent / totalCurrent) * 100 : 0
 
   return (
+    <>
     <div style={{
       minHeight: '100dvh',
       background: '#fdf5f1',
@@ -777,13 +797,29 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
             fontSize: 32,
             color: '#3a3340',
           }}>{DAY_PART_LABELS[activeTab].split(' ')[1]} quests</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
               fontFamily: "'Space Mono', monospace",
               fontSize: 13,
               letterSpacing: '0.08em',
               color: '#9a8fa6',
             }}>{doneCurrent} / {totalCurrent} DONE</span>
+            <button
+              onClick={() => setShowAddQuest(true)}
+              style={{
+                background: child.theme.bg,
+                border: `1.5px solid ${child.theme.dashed}`,
+                color: child.theme.accent,
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 10,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '5px 12px',
+                borderRadius: 999,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >+ Add quest</button>
             <button
               onClick={() => printSection(activeTab)}
               style={{
@@ -1286,5 +1322,14 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
       </div>
 
     </div>
+
+    {showAddQuest && (
+      <AddQuestModal
+        defaultSection={activeTab}
+        onSave={handleAddQuest}
+        onClose={() => setShowAddQuest(false)}
+      />
+    )}
+    </>
   )
 }

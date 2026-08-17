@@ -127,6 +127,8 @@ export default function App() {
         state={childState[currentChild]}
         quests={quests}
         onUpdate={updater => updateChild(currentChild, updater)}
+        onUpdateQuests={setQuests}
+        onUpdateChild={updateChild}
         onBack={() => setScreen('family-home')}
         onOpenShop={() => setScreen('shop')}
         onSuggestReward={() => setScreen('suggest-reward')}
