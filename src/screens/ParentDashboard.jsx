@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { CHILDREN, CHILD_ORDER, DEFAULT_SHOP_ITEMS } from '../data'
+import { CHILDREN, CHILD_ORDER, DEFAULT_SHOP_ITEMS, DAYS_OF_WEEK, DAY_LABELS } from '../data'
 import Avatar from '../components/Avatar'
 import { useLocalStorage } from '../hooks'
 import { ALL_QUEST_IMAGES, resolveQuestImage } from '../assets/quests/index'
@@ -449,9 +449,31 @@ function PhotoCard({ child }) {
   )
 }
 
+const SECTION_KEYS = ['morning', 'afternoon', 'evening']
+
+function recurrenceBadge(q) {
+  const rec = q.recurrence || 'daily'
+  if (rec === 'daily') return null
+  if (rec === 'weekly') {
+    const days = (q.days || []).map(d => DAY_LABELS[d]?.[0]).join(' ')
+    return days || null
+  }
+  if (rec === 'monthly') return `${q.dayOfMonth}th`
+  if (rec === 'once') return q.date ? q.date.slice(5).replace('-', '/') : 'one-time'
+  return null
+}
+
+function questMatchesDay(q, dayKey) {
+  const rec = q.recurrence || 'daily'
+  if (rec === 'daily') return true
+  if (rec === 'weekly') return (q.days || []).includes(dayKey)
+  return true
+}
+
 function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
   const [editingId, setEditingId] = useState(null)
   const [addingSection, setAddingSection] = useState(null)
+  const [filterDay, setFilterDay] = useState('all')
 
   const SECTIONS = [
     { key: 'morning',   label: 'Morning',   emoji: '☀️' },
@@ -459,28 +481,39 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
     { key: 'evening',   label: 'Evening',   emoji: '🌙' },
   ]
 
-  function saveQuest(section, questId, updates) {
-    onUpdateQuests(prev => ({
-      ...prev,
-      [section]: prev[section].map(q => q.id === questId ? { ...q, ...updates } : q),
-    }))
+  function saveQuest(questId, updates) {
+    onUpdateQuests(prev => {
+      const next = {}
+      SECTION_KEYS.forEach(section => {
+        next[section] = (prev[section] || []).map(q => q.id === questId ? { ...q, ...updates } : q)
+      })
+      return next
+    })
     setEditingId(null)
   }
 
-  function deleteQuest(section, questId) {
+  function deleteQuest(questId) {
     if (!window.confirm('Remove this quest for everyone?')) return
-    onUpdateQuests(prev => ({
-      ...prev,
-      [section]: prev[section].filter(q => q.id !== questId),
-    }))
+    onUpdateQuests(prev => {
+      const next = {}
+      SECTION_KEYS.forEach(section => {
+        next[section] = (prev[section] || []).filter(q => q.id !== questId)
+      })
+      return next
+    })
   }
 
-  function addQuest(section, { icon, title, tickets, imageKey, selectedKids }) {
+  function addQuest(defaultSection, { sections, icon, title, tickets, imageKey, selectedKids, recurrence, days, dayOfMonth, date }) {
     const newId = `q-${Date.now()}`
-    onUpdateQuests(prev => ({
-      ...prev,
-      [section]: [...prev[section], { id: newId, icon, title, tickets, imageKey }],
-    }))
+    const questData = { id: newId, icon, title, tickets, imageKey, recurrence, days, dayOfMonth, date }
+    const targetSections = (sections && sections.length > 0) ? sections : [defaultSection]
+    onUpdateQuests(prev => {
+      const next = { ...prev }
+      targetSections.forEach(section => {
+        next[section] = [...(next[section] || []), questData]
+      })
+      return next
+    })
     CHILD_ORDER.forEach(id => {
       if (!(selectedKids ?? CHILD_ORDER).includes(id)) {
         onUpdate(id, s => ({
@@ -490,6 +523,11 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
       }
     })
     setAddingSection(null)
+  }
+
+  function clearAllQuests() {
+    if (!window.confirm('Remove all quests? This cannot be undone.')) return
+    onUpdateQuests({ morning: [], afternoon: [], evening: [] })
   }
 
   function toggleChild(childId, questId, currentlyEnabled) {
@@ -505,146 +543,191 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
   }
 
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 22,
-      padding: '28px 32px',
-      boxShadow: '0 3px 14px rgba(58,51,64,.06)',
-      marginBottom: 0,
-    }}>
-      {SECTIONS.map(({ key, label, emoji }, si) => (
-        <div key={key} style={{ marginBottom: si < 2 ? 32 : 0 }}>
-          {/* Section header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: '#9a8fa6',
-            }}>{emoji} {label}</div>
-            <button
-              onClick={() => { setAddingSection(key); setEditingId(null) }}
-              style={{
-                background: 'none',
-                border: '1.5px solid #e0d4e8',
-                color: '#a8689a',
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 11,
-                letterSpacing: '0.08em',
-                padding: '5px 13px',
-                borderRadius: 999,
-                cursor: 'pointer',
-              }}>+ Add quest</button>
-          </div>
+    <div style={{ background: '#fff', borderRadius: 22, padding: '28px 32px', boxShadow: '0 3px 14px rgba(58,51,64,.06)', marginBottom: 0 }}>
 
-          {/* Quest rows */}
-          {(quests[key] || []).map(quest => (
-            <div key={quest.id}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '11px 0',
-                borderBottom: '1px solid #f4eef7',
-              }}>
-                {resolveQuestImage(quest.id, quest.imageKey)
-                  ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt="" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
-                  : <span style={{ fontSize: 20, width: 32, textAlign: 'center', flexShrink: 0 }}>{quest.icon}</span>
-                }
-                <span style={{ flex: 1, fontSize: 14, color: '#3a3340' }}>{quest.title}</span>
-                <span style={{
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: 11,
-                  color: '#9a8fa6',
-                  background: '#f6f0f9',
-                  padding: '3px 9px',
-                  borderRadius: 999,
-                  flexShrink: 0,
-                }}>{quest.tickets}🎟️</span>
+      {/* Day filter + clear */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#9a8fa6', letterSpacing: '0.12em', textTransform: 'uppercase', marginRight: 4 }}>Filter:</span>
+        {['all', ...DAYS_OF_WEEK].map(day => (
+          <button
+            key={day}
+            onClick={() => setFilterDay(day)}
+            style={{
+              padding: '5px 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
+              background: filterDay === day ? '#a8689a' : '#f6f0f9',
+              color: filterDay === day ? '#fff' : '#9a8fa6',
+              fontFamily: "'Space Mono', monospace", fontSize: 10,
+              fontWeight: filterDay === day ? 700 : 400, letterSpacing: '0.06em',
+              transition: 'all 0.15s',
+            }}
+          >{day === 'all' ? 'All' : DAY_LABELS[day]}</button>
+        ))}
+        <button
+          onClick={clearAllQuests}
+          style={{
+            marginLeft: 'auto', padding: '5px 13px', borderRadius: 999,
+            border: '1.5px solid #e0d4e8', background: 'none',
+            color: '#c9a0a0', cursor: 'pointer',
+            fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.06em',
+          }}
+        >Clear all</button>
+      </div>
 
-                {/* Per-child toggles */}
-                {CHILD_ORDER.map(childId => {
-                  const disabled = childState[childId]?.disabledQuests || []
-                  const enabled = !disabled.includes(quest.id)
-                  return (
-                    <button
-                      key={childId}
-                      onClick={() => toggleChild(childId, quest.id, enabled)}
-                      title={`${enabled ? 'Disable' : 'Enable'} for ${CHILDREN[childId].name}`}
-                      style={{
-                        width: 28, height: 28,
-                        borderRadius: '50%',
-                        background: enabled ? CHILDREN[childId].theme.accent : '#ece6f0',
-                        color: enabled ? '#fff' : '#b3a9be',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontFamily: "'DM Serif Display', serif",
-                        fontSize: 13,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                        transition: 'background 0.2s',
-                      }}
-                    >{CHILDREN[childId].name[0]}</button>
-                  )
-                })}
-
-                <button
-                  onClick={() => { setEditingId(editingId === quest.id ? null : quest.id); setAddingSection(null) }}
-                  style={{
-                    background: editingId === quest.id ? '#efe2f5' : 'none',
-                    border: 'none', borderRadius: 8,
-                    padding: '4px 8px', cursor: 'pointer', fontSize: 14, flexShrink: 0,
-                  }}>✏️</button>
-                <button
-                  onClick={() => deleteQuest(key, quest.id)}
-                  style={{
-                    background: 'none', border: 'none', borderRadius: 8,
-                    padding: '4px 8px', cursor: 'pointer', fontSize: 13,
-                    color: '#c9a0a0', flexShrink: 0,
-                  }}>✕</button>
-              </div>
-
-              {editingId === quest.id && (
-                <QuestForm
-                  initial={quest}
-                  onSave={updates => saveQuest(key, quest.id, updates)}
-                  onCancel={() => setEditingId(null)}
-                />
-              )}
+      {SECTIONS.map(({ key, label, emoji }, si) => {
+        const sectionQuests = (quests[key] || []).filter(q =>
+          filterDay === 'all' || questMatchesDay(q, filterDay)
+        )
+        return (
+          <div key={key} style={{ marginBottom: si < 2 ? 32 : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#9a8fa6' }}>{emoji} {label}</div>
+              <button
+                onClick={() => { setAddingSection(key); setEditingId(null) }}
+                style={{
+                  background: 'none', border: '1.5px solid #e0d4e8', color: '#a8689a',
+                  fontFamily: "'Space Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
+                  padding: '5px 13px', borderRadius: 999, cursor: 'pointer',
+                }}>+ Add quest</button>
             </div>
-          ))}
 
-          {addingSection === key && (
-            <QuestForm
-              initial={{ icon: '⭐', title: '', tickets: 2 }}
-              isNew
-              onSave={q => addQuest(key, q)}
-              onCancel={() => setAddingSection(null)}
-            />
-          )}
-        </div>
-      ))}
+            {sectionQuests.length === 0 && (
+              <div style={{ color: '#c4b8ce', fontFamily: "'Hanken Grotesk', sans-serif", fontSize: 13, padding: '8px 0' }}>
+                No quests{filterDay !== 'all' ? ` on ${DAY_LABELS[filterDay]}` : ''} — add one above.
+              </div>
+            )}
+
+            {sectionQuests.map(quest => {
+              const badge = recurrenceBadge(quest)
+              return (
+                <div key={quest.id}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: '1px solid #f4eef7' }}>
+                    {resolveQuestImage(quest.id, quest.imageKey)
+                      ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt="" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
+                      : <span style={{ fontSize: 20, width: 32, textAlign: 'center', flexShrink: 0 }}>{quest.icon}</span>
+                    }
+                    <span style={{ flex: 1, fontSize: 14, color: '#3a3340' }}>{quest.title}</span>
+                    {badge && (
+                      <span style={{
+                        fontFamily: "'Space Mono', monospace", fontSize: 10,
+                        color: '#a8689a', background: '#efe2f5',
+                        padding: '2px 8px', borderRadius: 999, flexShrink: 0,
+                      }}>{badge}</span>
+                    )}
+                    <span style={{
+                      fontFamily: "'Space Mono', monospace", fontSize: 11,
+                      color: '#9a8fa6', background: '#f6f0f9',
+                      padding: '3px 9px', borderRadius: 999, flexShrink: 0,
+                    }}>{quest.tickets}🎟️</span>
+
+                    {CHILD_ORDER.map(childId => {
+                      const disabled = childState[childId]?.disabledQuests || []
+                      const enabled = !disabled.includes(quest.id)
+                      return (
+                        <button
+                          key={childId}
+                          onClick={() => toggleChild(childId, quest.id, enabled)}
+                          title={`${enabled ? 'Disable' : 'Enable'} for ${CHILDREN[childId].name}`}
+                          style={{
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: enabled ? CHILDREN[childId].theme.accent : '#ece6f0',
+                            color: enabled ? '#fff' : '#b3a9be',
+                            border: 'none', cursor: 'pointer',
+                            fontFamily: "'DM Serif Display', serif", fontSize: 13,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, transition: 'background 0.2s',
+                          }}
+                        >{CHILDREN[childId].name[0]}</button>
+                      )
+                    })}
+
+                    <button
+                      onClick={() => { setEditingId(editingId === quest.id ? null : quest.id); setAddingSection(null) }}
+                      style={{ background: editingId === quest.id ? '#efe2f5' : 'none', border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 14, flexShrink: 0 }}>✏️</button>
+                    <button
+                      onClick={() => deleteQuest(quest.id)}
+                      style={{ background: 'none', border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontSize: 13, color: '#c9a0a0', flexShrink: 0 }}>✕</button>
+                  </div>
+
+                  {editingId === quest.id && (
+                    <QuestForm
+                      initial={quest}
+                      onSave={updates => saveQuest(quest.id, updates)}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  )}
+                </div>
+              )
+            })}
+
+            {addingSection === key && (
+              <QuestForm
+                initial={{ icon: '⭐', title: '', tickets: 2 }}
+                isNew
+                defaultSection={key}
+                onSave={q => addQuest(key, q)}
+                onCancel={() => setAddingSection(null)}
+              />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-function QuestForm({ initial, onSave, onCancel, isNew }) {
-  const [icon, setIcon] = useState(initial.icon)
-  const [title, setTitle] = useState(initial.title)
-  const [tickets, setTickets] = useState(initial.tickets)
+const RECURRENCE_OPTIONS = [
+  { key: 'daily',   label: 'Every day' },
+  { key: 'weekly',  label: 'Specific days' },
+  { key: 'monthly', label: 'Monthly' },
+  { key: 'once',    label: 'One-time' },
+]
+
+const DAY_PARTS_FORM = ['morning', 'afternoon', 'evening']
+const DAY_PART_LABELS_FORM = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
+
+function todayISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function QuestForm({ initial, onSave, onCancel, isNew, defaultSection }) {
+  const [icon, setIcon] = useState(initial.icon ?? '⭐')
+  const [title, setTitle] = useState(initial.title ?? '')
+  const [tickets, setTickets] = useState(initial.tickets ?? 2)
   const [imageKey, setImageKey] = useState(initial.imageKey ?? null)
   const [showPicker, setShowPicker] = useState(false)
   const [selectedKids, setSelectedKids] = useState([...CHILD_ORDER])
+  const [recurrence, setRecurrence] = useState(initial.recurrence ?? 'daily')
+  const [selectedDays, setSelectedDays] = useState(initial.days ?? [...DAYS_OF_WEEK])
+  const [dayOfMonth, setDayOfMonth] = useState(initial.dayOfMonth ?? new Date().getDate())
+  const [date, setDate] = useState(initial.date ?? todayISO())
+  const [sections, setSections] = useState(initial._sections ?? (defaultSection ? [defaultSection] : ['morning']))
 
   function toggleKid(id) {
     setSelectedKids(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id])
+  }
+  function toggleDay(day) {
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
+  }
+  function toggleSection(part) {
+    setSections(prev => prev.includes(part) ? prev.filter(s => s !== part) : [...prev, part])
   }
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!title.trim()) return
-    onSave({ icon: icon.trim() || '⭐', title: title.trim(), tickets: Math.max(1, Math.min(10, tickets)), imageKey: imageKey ?? undefined, selectedKids })
+    onSave({
+      icon: icon.trim() || '⭐',
+      title: title.trim(),
+      tickets: Math.max(1, Math.min(10, tickets)),
+      imageKey: imageKey ?? undefined,
+      selectedKids,
+      recurrence,
+      days: recurrence === 'weekly' ? selectedDays : undefined,
+      dayOfMonth: recurrence === 'monthly' ? dayOfMonth : undefined,
+      date: recurrence === 'once' ? date : undefined,
+      sections,
+    })
   }
 
   const currentSrc = imageKey
@@ -779,25 +862,93 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
         )}
       </div>
 
+      {/* Recurrence */}
+      <div>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>How often?</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {RECURRENCE_OPTIONS.map(opt => (
+            <button key={opt.key} type="button" onClick={() => setRecurrence(opt.key)}
+              style={{
+                padding: '6px 12px', borderRadius: 999, cursor: 'pointer',
+                border: `1.5px solid ${recurrence === opt.key ? '#a8689a' : '#e0d4e8'}`,
+                background: recurrence === opt.key ? '#efe2f5' : '#fff',
+                color: recurrence === opt.key ? '#a8689a' : '#9a8fa6',
+                fontFamily: "'Space Mono', monospace", fontSize: 10,
+                fontWeight: recurrence === opt.key ? 700 : 400, whiteSpace: 'nowrap',
+              }}
+            >{opt.label}</button>
+          ))}
+        </div>
+        {recurrence === 'weekly' && (
+          <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+            {DAYS_OF_WEEK.map(day => {
+              const sel = selectedDays.includes(day)
+              return (
+                <button key={day} type="button" onClick={() => toggleDay(day)}
+                  style={{
+                    flex: 1, padding: '7px 2px', borderRadius: 8, cursor: 'pointer',
+                    border: `1.5px solid ${sel ? '#a8689a' : '#e0d4e8'}`,
+                    background: sel ? '#efe2f5' : '#fff',
+                    color: sel ? '#a8689a' : '#9a8fa6',
+                    fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: sel ? 700 : 400,
+                  }}
+                >{DAY_LABELS[day][0]}</button>
+              )
+            })}
+          </div>
+        )}
+        {recurrence === 'monthly' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: '#9a8fa6', fontFamily: "'Hanken Grotesk', sans-serif" }}>Day of month:</span>
+            <input type="number" value={dayOfMonth}
+              onChange={e => setDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value))))}
+              min={1} max={31} style={{ ...inputStyle, width: 60, textAlign: 'center', padding: '6px 8px' }} />
+          </div>
+        )}
+        {recurrence === 'once' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: '#9a8fa6', fontFamily: "'Hanken Grotesk', sans-serif" }}>Date:</span>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              style={{ ...inputStyle, padding: '6px 10px' }} />
+          </div>
+        )}
+      </div>
+
+      {/* Section picker (new quests only) */}
       {isNew && (
         <div>
-          <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: 10,
-            letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: '#9a8fa6', marginBottom: 8,
-          }}>Assign to</div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>Also show in</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {DAY_PARTS_FORM.map(part => {
+              const sel = sections.includes(part)
+              return (
+                <button key={part} type="button" onClick={() => toggleSection(part)}
+                  style={{
+                    flex: 1, padding: '7px 4px', borderRadius: 10, cursor: 'pointer',
+                    border: `1.5px solid ${sel ? '#a8689a' : '#e0d4e8'}`,
+                    background: sel ? '#efe2f5' : '#fff',
+                    color: sel ? '#a8689a' : '#9a8fa6',
+                    fontFamily: "'Space Mono', monospace", fontSize: 10, fontWeight: sel ? 700 : 400,
+                  }}
+                >{DAY_PART_LABELS_FORM[part]}</button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Child assignment (new quests only) */}
+      {isNew && (
+        <div>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>Assign to</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {CHILD_ORDER.map(id => {
               const child = CHILDREN[id]
               const sel = selectedKids.includes(id)
               return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => toggleKid(id)}
+                <button key={id} type="button" onClick={() => toggleKid(id)}
                   style={{
-                    flex: 1, padding: '10px 6px',
-                    borderRadius: 12,
+                    flex: 1, padding: '10px 6px', borderRadius: 12,
                     border: `1.5px solid ${sel ? child.theme.accent : '#e0d4e8'}`,
                     background: sel ? child.theme.bg : '#fff',
                     cursor: 'pointer',
@@ -805,12 +956,8 @@ function QuestForm({ initial, onSave, onCancel, isNew }) {
                     transition: 'all 0.15s',
                   }}
                 >
-                  <span style={{ fontSize: 14, fontWeight: 700, color: sel ? child.theme.accent : '#b3a9be' }}>
-                    {child.name[0]}
-                  </span>
-                  <span style={{ fontSize: 11, color: sel ? child.theme.accent : '#9a8fa6' }}>
-                    {child.name}
-                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: sel ? child.theme.accent : '#b3a9be' }}>{child.name[0]}</span>
+                  <span style={{ fontSize: 11, color: sel ? child.theme.accent : '#9a8fa6' }}>{child.name}</span>
                 </button>
               )
             })}

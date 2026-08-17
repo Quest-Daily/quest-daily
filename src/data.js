@@ -45,24 +45,14 @@ export const CHILDREN = {
 
 export const CHILD_ORDER = ['max', 'hendrix', 'felix']
 
+export const DAYS_OF_WEEK = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+export const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' }
+export const DAY_FULL_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' }
+
 export const QUESTS = {
-  morning: [
-    { id: 'make-bed', icon: '🛏️', title: 'Make your bed', tickets: 2 },
-    { id: 'brush-teeth', icon: '🪥', title: 'Brush teeth', tickets: 1 },
-    { id: 'reading', icon: '📚', title: 'Reading — 20 mins', tickets: 3 },
-    { id: 'laundry', icon: '🧺', title: 'Put away laundry', tickets: 2 },
-    { id: 'set-table', icon: '🍽️', title: 'Set the table', tickets: 2 },
-  ],
-  afternoon: [
-    { id: 'homework', icon: '📖', title: 'Do your homework', tickets: 3 },
-    { id: 'tidy-room', icon: '🧹', title: 'Tidy your bedroom', tickets: 2 },
-    { id: 'unpack-bag', icon: '🎒', title: 'Unpack school bag', tickets: 1 },
-  ],
-  evening: [
-    { id: 'shower', icon: '🚿', title: 'Have a shower', tickets: 1 },
-    { id: 'pack-bag', icon: '🎒', title: 'Pack school bag', tickets: 1 },
-    { id: 'read-bed', icon: '📖', title: 'Read before bed', tickets: 2 },
-  ],
+  morning: [],
+  afternoon: [],
+  evening: [],
 }
 
 export const SIDE_QUESTS = [

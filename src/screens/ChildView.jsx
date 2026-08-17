@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES } from '../data'
+import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES, DAYS_OF_WEEK, DAY_FULL_LABELS } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { resolveQuestImage } from '../assets/quests/index'
 import { useClock } from '../hooks'
@@ -221,17 +221,39 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     setTimeout(() => setTicketPop(false), 450)
   }
 
-  function enabledQuests(part) {
-    const disabled = state.disabledQuests || []
-    return (quests[part] || []).filter(q => !disabled.includes(q.id))
+  const todayKey = (() => {
+    const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+    return keys[new Date().getDay()]
+  })()
+
+  function questMatchesToday(q) {
+    const rec = q.recurrence || 'daily'
+    if (rec === 'once') {
+      if (!q.date) return false
+      const d = new Date(q.date + 'T00:00:00')
+      const t = new Date()
+      return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate()
+    }
+    if (rec === 'monthly') return new Date().getDate() === q.dayOfMonth
+    if (rec === 'weekly') return (q.days || []).includes(todayKey)
+    return true
   }
 
-  function handleAddQuest({ section, icon, title, tickets, imageKey, selectedKids }) {
+  function enabledQuests(part) {
+    const disabled = state.disabledQuests || []
+    return (quests[part] || []).filter(q => !disabled.includes(q.id) && questMatchesToday(q))
+  }
+
+  function handleAddQuest({ sections, icon, title, tickets, imageKey, selectedKids, recurrence, days, dayOfMonth, date }) {
     const newId = `q-${Date.now()}`
-    onUpdateQuests(prev => ({
-      ...prev,
-      [section]: [...(prev[section] || []), { id: newId, icon, title, tickets, imageKey }],
-    }))
+    const questData = { id: newId, icon, title, tickets, imageKey, recurrence, days, dayOfMonth, date }
+    onUpdateQuests(prev => {
+      const next = { ...prev }
+      sections.forEach(section => {
+        next[section] = [...(next[section] || []), questData]
+      })
+      return next
+    })
     CHILD_ORDER.forEach(id => {
       if (!selectedKids.includes(id)) {
         onUpdateChild(id, s => ({
@@ -315,8 +337,9 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         const disabled = state.disabledQuests || []
         const full = prev[section] || []
         const disabledQuests = full.filter(q => disabled.includes(q.id))
+        const hiddenByRecurrence = full.filter(q => !disabled.includes(q.id) && !questMatchesToday(q))
         const reordered = finalOrder.map(id => full.find(q => q.id === id)).filter(Boolean)
-        return { ...prev, [section]: [...reordered, ...disabledQuests] }
+        return { ...prev, [section]: [...reordered, ...hiddenByRecurrence, ...disabledQuests] }
       })
       questDragInfo.current = null
       setQuestDragState(null)
@@ -879,11 +902,17 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
 
         {/* Quest heading + progress */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-          <h2 style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: 32,
-            color: '#3a3340',
-          }}>{DAY_PART_LABELS[activeTab].split(' ')[1]} quests</h2>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: '#3a3340', margin: 0 }}>
+              {DAY_PART_LABELS[activeTab].split(' ')[1]} quests
+            </h2>
+            <span style={{
+              fontFamily: "'Space Mono', monospace", fontSize: 10,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: '#b3a9be', background: '#f6f0f9',
+              padding: '3px 10px', borderRadius: 999,
+            }}>{DAY_FULL_LABELS[todayKey]}</span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
               fontFamily: "'Space Mono', monospace",
@@ -1425,7 +1454,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
 
     {showAddQuest && (
       <AddQuestModal
-        defaultSection={activeTab}
+        defaultSections={[activeTab]}
         onSave={handleAddQuest}
         onClose={() => setShowAddQuest(false)}
       />

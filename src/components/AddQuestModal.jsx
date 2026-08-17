@@ -1,38 +1,66 @@
 import { useState } from 'react'
-import { CHILDREN, CHILD_ORDER } from '../data'
+import { CHILDREN, CHILD_ORDER, DAYS_OF_WEEK, DAY_LABELS } from '../data'
 import { ALL_QUEST_IMAGES } from '../assets/quests/index'
 
 const DAY_PARTS = ['morning', 'afternoon', 'evening']
 const DAY_PART_LABELS = { morning: '☀️ Morning', afternoon: '🌤️ Afternoon', evening: '🌙 Evening' }
 
-export default function AddQuestModal({ defaultSection = 'morning', onSave, onClose }) {
-  const [section, setSection] = useState(defaultSection)
+const RECURRENCE_OPTIONS = [
+  { key: 'daily',   label: 'Every day' },
+  { key: 'weekly',  label: 'Specific days' },
+  { key: 'monthly', label: 'Monthly' },
+  { key: 'once',    label: 'One-time date' },
+]
+
+function todayISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export default function AddQuestModal({ defaultSections = ['morning'], onSave, onClose }) {
+  const [sections, setSections] = useState(defaultSections)
   const [icon, setIcon] = useState('⭐')
   const [title, setTitle] = useState('')
   const [tickets, setTickets] = useState(2)
   const [imageKey, setImageKey] = useState(null)
   const [showPicker, setShowPicker] = useState(false)
   const [selectedKids, setSelectedKids] = useState([...CHILD_ORDER])
+  const [recurrence, setRecurrence] = useState('daily')
+  const [selectedDays, setSelectedDays] = useState([...DAYS_OF_WEEK])
+  const [dayOfMonth, setDayOfMonth] = useState(new Date().getDate())
+  const [date, setDate] = useState(todayISO)
 
+  function toggleSection(part) {
+    setSections(prev => prev.includes(part) ? prev.filter(s => s !== part) : [...prev, part])
+  }
   function toggleKid(id) {
     setSelectedKids(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id])
+  }
+  function toggleDay(day) {
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
   }
 
   function handleSave(e) {
     e.preventDefault()
-    if (!title.trim() || selectedKids.length === 0) return
+    if (!title.trim() || selectedKids.length === 0 || sections.length === 0) return
+    if (recurrence === 'weekly' && selectedDays.length === 0) return
     onSave({
-      section,
+      sections,
       icon: icon.trim() || '⭐',
       title: title.trim(),
       tickets: Math.max(1, Math.min(10, tickets)),
       imageKey: imageKey ?? undefined,
       selectedKids,
+      recurrence,
+      days: recurrence === 'weekly' ? selectedDays : undefined,
+      dayOfMonth: recurrence === 'monthly' ? dayOfMonth : undefined,
+      date: recurrence === 'once' ? date : undefined,
     })
   }
 
   const currentSrc = imageKey ? ALL_QUEST_IMAGES.find(i => i.key === imageKey)?.src : null
-  const canSave = title.trim().length > 0 && selectedKids.length > 0
+  const canSave = title.trim().length > 0 && selectedKids.length > 0 && sections.length > 0 &&
+    (recurrence !== 'weekly' || selectedDays.length > 0)
 
   const inputStyle = {
     border: '1.5px solid #e0d4e8', borderRadius: 12,
@@ -84,34 +112,110 @@ export default function AddQuestModal({ defaultSection = 'morning', onSave, onCl
           >×</button>
         </div>
 
-        {/* Section selector */}
+        {/* Section multi-select */}
         <div style={{ marginBottom: 22 }}>
-          <span style={labelStyle}>When?</span>
+          <span style={labelStyle}>When? (select all that apply)</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            {DAY_PARTS.map(part => (
+            {DAY_PARTS.map(part => {
+              const sel = sections.includes(part)
+              return (
+                <button
+                  key={part}
+                  type="button"
+                  onClick={() => toggleSection(part)}
+                  style={{
+                    flex: 1, padding: '10px 6px', borderRadius: 12,
+                    border: `2px solid ${sel ? '#a8689a' : '#e0d4e8'}`,
+                    background: sel ? '#efe2f5' : '#fff',
+                    color: sel ? '#a8689a' : '#9a8fa6',
+                    cursor: 'pointer',
+                    fontFamily: "'Space Mono', monospace", fontSize: 11,
+                    fontWeight: sel ? 700 : 400, letterSpacing: '0.04em',
+                    transition: 'all 0.15s', textAlign: 'center',
+                  }}
+                >{DAY_PART_LABELS[part]}</button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Recurrence */}
+        <div style={{ marginBottom: recurrence === 'daily' ? 22 : 12 }}>
+          <span style={labelStyle}>How often?</span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {RECURRENCE_OPTIONS.map(opt => (
               <button
-                key={part}
+                key={opt.key}
                 type="button"
-                onClick={() => setSection(part)}
+                onClick={() => setRecurrence(opt.key)}
                 style={{
-                  flex: 1,
-                  padding: '10px 6px',
-                  borderRadius: 12,
-                  border: `2px solid ${section === part ? '#a8689a' : '#e0d4e8'}`,
-                  background: section === part ? '#efe2f5' : '#fff',
-                  color: section === part ? '#a8689a' : '#9a8fa6',
+                  flex: 1, minWidth: 'max-content', padding: '9px 10px', borderRadius: 12,
+                  border: `2px solid ${recurrence === opt.key ? '#a8689a' : '#e0d4e8'}`,
+                  background: recurrence === opt.key ? '#efe2f5' : '#fff',
+                  color: recurrence === opt.key ? '#a8689a' : '#9a8fa6',
                   cursor: 'pointer',
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: 11,
-                  fontWeight: section === part ? 700 : 400,
-                  letterSpacing: '0.04em',
-                  transition: 'all 0.15s',
-                  textAlign: 'center',
+                  fontFamily: "'Space Mono', monospace", fontSize: 10,
+                  fontWeight: recurrence === opt.key ? 700 : 400,
+                  letterSpacing: '0.04em', transition: 'all 0.15s', whiteSpace: 'nowrap',
                 }}
-              >{DAY_PART_LABELS[part]}</button>
+              >{opt.label}</button>
             ))}
           </div>
         </div>
+
+        {/* Specific days */}
+        {recurrence === 'weekly' && (
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {DAYS_OF_WEEK.map(day => {
+                const sel = selectedDays.includes(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleDay(day)}
+                    style={{
+                      flex: 1, padding: '9px 4px', borderRadius: 10,
+                      border: `2px solid ${sel ? '#a8689a' : '#e0d4e8'}`,
+                      background: sel ? '#efe2f5' : '#fff',
+                      color: sel ? '#a8689a' : '#9a8fa6',
+                      cursor: 'pointer',
+                      fontFamily: "'Space Mono', monospace", fontSize: 10,
+                      fontWeight: sel ? 700 : 400, transition: 'all 0.15s',
+                    }}
+                  >{DAY_LABELS[day][0]}</button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Day of month */}
+        {recurrence === 'monthly' && (
+          <div style={{ marginBottom: 22, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 13, color: '#9a8fa6', fontFamily: "'Hanken Grotesk', sans-serif" }}>Day of month:</span>
+            <input
+              type="number"
+              value={dayOfMonth}
+              onChange={e => setDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value))))}
+              min={1} max={31}
+              style={{ ...inputStyle, width: 72, textAlign: 'center', padding: '9px 8px' }}
+            />
+          </div>
+        )}
+
+        {/* One-time date */}
+        {recurrence === 'once' && (
+          <div style={{ marginBottom: 22, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 13, color: '#9a8fa6', fontFamily: "'Hanken Grotesk', sans-serif" }}>Date:</span>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              style={{ ...inputStyle, padding: '9px 12px' }}
+            />
+          </div>
+        )}
 
         {/* Icon + title + tickets */}
         <div style={{ marginBottom: 18 }}>
@@ -173,18 +277,14 @@ export default function AddQuestModal({ defaultSection = 'morning', onSave, onCl
               <button
                 type="button"
                 onClick={() => setImageKey(null)}
-                style={{
-                  background: 'none', border: 'none', fontSize: 12,
-                  color: '#b3a9be', cursor: 'pointer', padding: '4px 8px',
-                }}
+                style={{ background: 'none', border: 'none', fontSize: 12, color: '#b3a9be', cursor: 'pointer', padding: '4px 8px' }}
               >Reset</button>
             )}
           </div>
           {showPicker && (
             <div style={{
               marginTop: 10,
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
               gap: 8, maxHeight: 240, overflowY: 'auto', padding: '4px 2px',
             }}>
               {ALL_QUEST_IMAGES.map(img => (
@@ -225,8 +325,7 @@ export default function AddQuestModal({ defaultSection = 'morning', onSave, onCl
                   type="button"
                   onClick={() => toggleKid(id)}
                   style={{
-                    flex: 1, padding: '14px 8px',
-                    borderRadius: 16,
+                    flex: 1, padding: '14px 8px', borderRadius: 16,
                     border: `2px solid ${sel ? child.theme.accent : '#e0d4e8'}`,
                     background: sel ? child.theme.bg : '#fff',
                     cursor: 'pointer',
@@ -234,13 +333,8 @@ export default function AddQuestModal({ defaultSection = 'morning', onSave, onCl
                     transition: 'all 0.15s',
                   }}
                 >
-                  <span style={{
-                    fontFamily: "'DM Serif Display', serif", fontSize: 22, lineHeight: 1,
-                    color: sel ? child.theme.accent : '#b3a9be',
-                  }}>{child.avatar}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: sel ? child.theme.accent : '#9a8fa6' }}>
-                    {child.name}
-                  </span>
+                  <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, lineHeight: 1, color: sel ? child.theme.accent : '#b3a9be' }}>{child.avatar}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: sel ? child.theme.accent : '#9a8fa6' }}>{child.name}</span>
                   {sel && <span style={{ fontSize: 11, color: child.theme.accent }}>✓</span>}
                 </button>
               )
@@ -269,7 +363,7 @@ export default function AddQuestModal({ defaultSection = 'morning', onSave, onCl
               : selectedKids.length === 1
                 ? `Add quest for ${CHILDREN[selectedKids[0]].name}`
                 : `Add quest for ${selectedKids.map(id => CHILDREN[id].name).join(' & ')}`
-            : 'Enter a name and select at least one child'}
+            : 'Choose a name, time of day, and at least one child'}
         </button>
       </form>
     </div>
