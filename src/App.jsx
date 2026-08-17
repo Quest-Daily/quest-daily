@@ -36,6 +36,10 @@ export default function App() {
           }
           if (!parsed[id].disabledQuests) parsed[id].disabledQuests = []
           if (!parsed[id].notePositions) parsed[id].notePositions = initial[id].notePositions
+          // Remove rocket sticker from Hendrix's board
+          if (id === 'hendrix' && parsed[id].headerStickers) {
+            parsed[id].headerStickers = parsed[id].headerStickers.filter(s => s.id !== 'rocket')
+          }
           // Migrate old headerStickers (string/null array) to object array
           if (!parsed[id].headerStickers) {
             parsed[id].headerStickers = []

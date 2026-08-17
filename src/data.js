@@ -215,7 +215,6 @@ export function createInitialState() {
       streak: 3,
       weekDays: [true, true, true, false, false, false, false],
       headerStickers: [
-        { id: 'rocket', x: 12, y: 22, size: 72, rotate: -12 },
         { id: 'soccer', x: 87, y: 10, size: 68, rotate:   8 },
         { id: 'dino',   x: 30, y: 80, size: 60, rotate:   5 },
       ],
