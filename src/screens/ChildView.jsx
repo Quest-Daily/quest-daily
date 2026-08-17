@@ -96,6 +96,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const headerRef = useRef(null)
   const movedRef = useRef(false)
+  const noteRefs = useRef({})
 
   const headerStickers = state.headerStickers || []
   const headerNotes = state.notePositions || []
@@ -176,9 +177,32 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
   }
 
   function acknowledgeNote(idx, buttonEl) {
-    updateNoteAt(idx, { acknowledged: true })
-    const rect = buttonEl.getBoundingClientRect()
-    spawnConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2)
+    const note = headerNotes[idx]
+    if (!note) return
+
+    // Confetti from the button
+    const btnRect = buttonEl.getBoundingClientRect()
+    spawnConfetti(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2)
+
+    // Scrunch the note element using its current transform as the base
+    const noteEl = noteRefs.current[note.id]
+    if (noteEl) {
+      const base = noteEl.style.transform
+      noteEl.animate([
+        { transform: base,                                                            offset: 0    },
+        { transform: `${base} scale(1.08)`,                                           offset: 0.08 },
+        { transform: `${base} scale(0.92) skewX(9deg)  skewY(3deg)`,                 offset: 0.22 },
+        { transform: `${base} scale(0.78) skewX(-11deg) skewY(-5deg) rotate(8deg)`,  offset: 0.40 },
+        { transform: `${base} scale(0.55) skewX(7deg)  skewY(4deg)  rotate(-14deg)`, offset: 0.58 },
+        { transform: `${base} scale(0.30) rotate(22deg)`,                             offset: 0.76 },
+        { transform: `${base} scale(0)   rotate(-30deg)`, opacity: 0,                offset: 1    },
+      ], { duration: 680, easing: 'ease-in', fill: 'forwards' })
+    }
+
+    // Remove from state once animation finishes
+    setTimeout(() => {
+      onUpdate(s => ({ ...s, notePositions: (s.notePositions || []).filter(n => n.id !== note.id) }))
+    }, 670)
   }
 
   function deleteSelected() {
@@ -381,6 +405,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
           return (
             <div
               key={note.id}
+              ref={el => { noteRefs.current[note.id] = el }}
               style={{
                 position: 'absolute',
                 left: `${note.x}%`, top: `${note.y}%`,
@@ -441,33 +466,12 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                     minHeight: Math.round(100 * scale),
                     cursor: isSel ? 'text' : 'grab',
                     pointerEvents: isSel ? 'auto' : 'none',
-                    opacity: note.acknowledged ? 0.55 : 1,
                   }}
                 />
-                {/* Acknowledged overlay */}
-                {note.acknowledged && (
-                  <div style={{
-                    position: 'absolute', inset: 0, borderRadius: 3,
-                    background: 'rgba(91,138,92,0.12)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    pointerEvents: 'none',
-                  }}>
-                    <div style={{
-                      width: Math.round(48 * scale), height: Math.round(48 * scale),
-                      borderRadius: '50%',
-                      background: '#5b8a5c',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: Math.round(24 * scale),
-                      color: '#fff',
-                      boxShadow: '0 2px 10px rgba(91,138,92,0.4)',
-                    }}>✓</div>
-                  </div>
-                )}
               </div>
 
               {/* Acknowledge button — always visible to kids */}
-              {!note.acknowledged && (
-                <button
+              <button
                   onPointerDown={e => e.stopPropagation()}
                   onClick={e => { e.stopPropagation(); acknowledgeNote(idx, e.currentTarget) }}
                   style={{
@@ -483,7 +487,6 @@ export default function ChildView({ childId, state, quests, onUpdate, onBack, on
                     lineHeight: 1,
                   }}
                 >✓</button>
-              )}
 
               {isSel && (
                 <>
