@@ -795,7 +795,11 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0,
                   height: 14,
-                  background: 'linear-gradient(180deg, #c08858 0%, #9B6338 28%, #8B5530 55%, #7a4a26 100%)',
+                  background: [
+                    'repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(140,108,72,0.055) 2px, rgba(140,108,72,0.055) 2.5px, transparent 2.5px, transparent 5.5px, rgba(140,108,72,0.035) 5.5px, rgba(140,108,72,0.035) 6px)',
+                    'repeating-linear-gradient(180deg, transparent 0, transparent 11px, rgba(160,120,80,0.04) 11px, rgba(160,120,80,0.04) 12.5px)',
+                    'linear-gradient(180deg, #f6ece0 0%, #f0e4d4 35%, #e8d8c6 65%, #dcceb8 100%)',
+                  ].join(', '),
                   borderRadius: 3,
                   boxShadow: '0 3px 10px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(0,0,0,0.18)',
                 }} />
@@ -803,7 +807,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
               {/* Calendar card */}
               <div
                 onPointerDown={e => e.stopPropagation()}
-                style={{ background: '#fffdf8', borderRadius: 10, boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden', position: 'relative' }}
+                style={{ background: '#fffdf8', borderRadius: '0 0 10px 10px', boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden', position: 'relative' }}
               >
                 {/* Month navigation */}
                 <div style={{ background: child.theme.bg, padding: '5px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
