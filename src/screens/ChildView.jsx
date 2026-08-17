@@ -783,25 +783,24 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                 draggable={false}
               >
                 {/* Wire triangle */}
-                <svg width="168" height="50" style={{ display: 'block' }} draggable={false}>
-                  {/* Mount nail */}
-                  <circle cx="84" cy="7" r="4.5" fill="#c8a84e" />
-                  <circle cx="84" cy="7" r="2.2" fill="#906030" />
+                <svg width="168" height="56" style={{ display: 'block' }} draggable={false}>
+                  {/* Mount nail — silver */}
+                  <circle cx="84" cy="7" r="3.5" fill="#b0a89e" />
+                  <circle cx="84" cy="7" r="1.6" fill="#706860" />
                   {/* Wire */}
-                  <line x1="84" y1="7" x2="5" y2="44" stroke="#b89a48" strokeWidth="1.3" strokeLinecap="round" />
-                  <line x1="84" y1="7" x2="163" y2="44" stroke="#b89a48" strokeWidth="1.3" strokeLinecap="round" />
+                  <line x1="84" y1="7" x2="5" y2="50" stroke="#a8a098" strokeWidth="1.2" strokeLinecap="round" />
+                  <line x1="84" y1="7" x2="163" y2="50" stroke="#a8a098" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
                 {/* Wooden bar */}
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0,
-                  height: 14,
+                  height: 15,
                   background: [
-                    'repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(140,108,72,0.055) 2px, rgba(140,108,72,0.055) 2.5px, transparent 2.5px, transparent 5.5px, rgba(140,108,72,0.035) 5.5px, rgba(140,108,72,0.035) 6px)',
-                    'repeating-linear-gradient(180deg, transparent 0, transparent 11px, rgba(160,120,80,0.04) 11px, rgba(160,120,80,0.04) 12.5px)',
-                    'linear-gradient(180deg, #f6ece0 0%, #f0e4d4 35%, #e8d8c6 65%, #dcceb8 100%)',
+                    'repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(140,108,72,0.052) 2px, rgba(140,108,72,0.052) 2.5px, transparent 2.5px, transparent 5.5px, rgba(140,108,72,0.032) 5.5px, rgba(140,108,72,0.032) 6px)',
+                    'linear-gradient(180deg, #f5e8d4 0%, #f5e8d4 7%, #e4ceac 20%, #d4bc96 50%, #c4aa80 80%, #b09468 100%)',
                   ].join(', '),
                   borderRadius: 3,
-                  boxShadow: '0 3px 10px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(0,0,0,0.18)',
+                  boxShadow: '0 6px 18px rgba(0,0,0,0.20), 0 2px 5px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.60)',
                 }} />
               </div>
               {/* Calendar card */}
@@ -847,13 +846,12 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                     })}
                   </div>
                 </div>
-                {/* Resize handle */}
+                {/* Resize handle — invisible grab zone in corner */}
                 <div
                   onPointerDown={e => { e.stopPropagation(); startCalDrag(e, 'resize') }}
                   style={{
-                    position: 'absolute', bottom: -10, right: -10,
-                    width: 20, height: 20, borderRadius: '50%',
-                    background: '#fff', border: '2.5px solid #3a3340',
+                    position: 'absolute', bottom: 0, right: 0,
+                    width: 22, height: 22,
                     cursor: 'nwse-resize', zIndex: 30, touchAction: 'none',
                   }}
                 />
