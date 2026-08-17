@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES, DAYS_OF_WEEK, DAY_FULL_LABELS } from '../data'
+import { CHILDREN, CHILD_ORDER, SIDE_QUESTS, ROUTINES, MOODS, STICKERS, STICKER_CATEGORIES, DAYS_OF_WEEK, DAY_LABELS, DAY_FULL_LABELS } from '../data'
 import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 import { resolveQuestImage } from '../assets/quests/index'
 import { useClock } from '../hooks'
@@ -96,6 +96,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [dragState, setDragState] = useState(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
+  const [viewingDay, setViewingDay] = useState(null) // null = today, or a day key like 'mon'
   const [questDragState, setQuestDragState] = useState(null) // { questId, section, displayOrder }
   const headerRef = useRef(null)
   const movedRef = useRef(false)
@@ -252,9 +253,18 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     return true
   }
 
+  function questMatchesDay(q, dayKey) {
+    const rec = q.recurrence || 'daily'
+    if (rec === 'weekly') return (q.days || []).includes(dayKey)
+    // once/monthly can only be previewed on today (we don't know future dates)
+    if (rec === 'once' || rec === 'monthly') return dayKey === todayKey ? questMatchesToday(q) : false
+    return true
+  }
+
   function enabledQuests(part) {
     const disabled = state.disabledQuests || []
-    return (quests[part] || []).filter(q => !disabled.includes(q.id) && questMatchesToday(q))
+    const dayKey = viewingDay || todayKey
+    return (quests[part] || []).filter(q => !disabled.includes(q.id) && questMatchesDay(q, dayKey))
   }
 
   function handleAddQuest({ sections, icon, title, tickets, imageKey, selectedKids, recurrence, days, dayOfMonth, date }) {
@@ -707,34 +717,66 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
           )
         })}
 
-        {/* Add buttons */}
-        <div style={{
-          position: 'absolute', bottom: 12, right: 12,
-          display: 'flex', gap: 7, zIndex: 8,
-        }}>
+        {/* Calendar + add buttons strip — pinned to bottom of noticeboard */}
+        <div
+          onClick={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+          style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            zIndex: 8,
+            background: 'rgba(255,253,249,0.9)',
+            backdropFilter: 'blur(8px)',
+            borderTop: '1px solid rgba(211,188,230,0.3)',
+            padding: '7px 12px',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          {/* Day picker */}
+          <div style={{ display: 'flex', gap: 3, flex: 1 }}>
+            {DAYS_OF_WEEK.map(day => {
+              const isToday = day === todayKey
+              const activeDay = viewingDay || todayKey
+              const isActive = activeDay === day
+              return (
+                <button
+                  key={day}
+                  onClick={() => setViewingDay(day === todayKey ? null : viewingDay === day ? null : day)}
+                  style={{
+                    flex: 1, padding: '6px 2px',
+                    borderRadius: 8,
+                    border: isActive && !isToday ? `2px solid ${child.theme.accent}` : '2px solid transparent',
+                    background: isToday ? child.theme.accent : isActive ? child.theme.bg : 'transparent',
+                    color: isToday ? '#fff' : isActive ? child.theme.accent : '#9a8fa6',
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: 9, fontWeight: isActive ? 700 : 400,
+                    cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center',
+                  }}
+                >{DAY_LABELS[day][0]}</button>
+              )
+            })}
+          </div>
+          {/* Divider */}
+          <div style={{ width: 1, height: 24, background: 'rgba(211,188,230,0.5)', flexShrink: 0 }} />
+          {/* Add note / sticker */}
           <button
-            onClick={e => { e.stopPropagation(); addNote() }}
+            onClick={addNote}
             style={{
-              background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)',
-              border: 'none', borderRadius: 999,
-              padding: '7px 13px', fontSize: 12,
-              fontFamily: "'Space Mono', monospace",
-              color: '#6b5a3c', cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(58,51,64,.12)',
+              background: 'none', border: 'none', padding: '4px 6px',
+              fontSize: 16, cursor: 'pointer', flexShrink: 0,
             }}
-          >📝 Note</button>
+            title="Add note"
+          >📝</button>
           <button
-            onClick={e => { e.stopPropagation(); setShowStickerPicker('add') }}
+            onClick={() => setShowStickerPicker('add')}
             style={{
-              background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(6px)',
-              border: 'none', borderRadius: 999,
-              padding: '7px 13px', fontSize: 12,
-              fontFamily: "'Space Mono', monospace",
-              color: child.theme.accent, cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(58,51,64,.12)',
+              background: 'none', border: 'none', padding: '4px 6px',
+              fontSize: 16, cursor: 'pointer', flexShrink: 0,
             }}
-          >⭐ Sticker</button>
+            title="Add sticker"
+          >⭐</button>
         </div>
+
+        {/* (Note/Sticker buttons moved into calendar strip below) */}
 
         {/* Center identity */}
         <div style={{ position: 'relative', zIndex: 5, pointerEvents: 'none' }}>
@@ -922,9 +964,12 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
             <span style={{
               fontFamily: "'Space Mono', monospace", fontSize: 10,
               letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: '#b3a9be', background: '#f6f0f9',
+              color: viewingDay ? child.theme.accent : '#b3a9be',
+              background: viewingDay ? child.theme.bg : '#f6f0f9',
               padding: '3px 10px', borderRadius: 999,
-            }}>{DAY_FULL_LABELS[todayKey]}</span>
+            }}>
+              {viewingDay ? `${DAY_FULL_LABELS[viewingDay]} preview` : DAY_FULL_LABELS[todayKey]}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
@@ -1009,7 +1054,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                 </div>
 
                 <button
-                  onClick={() => { if (!questDragInfo.current) toggleQuest(activeTab, quest.id) }}
+                  onClick={() => { if (!questDragInfo.current && !viewingDay) toggleQuest(activeTab, quest.id) }}
                   className="press-btn"
                   style={{
                     width: '100%',
