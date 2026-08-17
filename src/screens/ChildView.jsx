@@ -776,26 +776,35 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                 touchAction: 'none',
               }}
             >
-              {/* Hanging cord — drag handle */}
+              {/* Hanging mechanism — drag handle */}
               <div
                 onPointerDown={e => startCalDrag(e, 'move')}
-                style={{ display: 'flex', justifyContent: 'center', gap: 52, marginBottom: 0, cursor: 'grab', paddingBottom: 2 }}
+                style={{ cursor: 'grab', position: 'relative', userSelect: 'none' }}
+                draggable={false}
               >
-                {[0, 1].map(i => (
-                  <div key={i} style={{ width: 2, height: 12, background: '#b8a8c8', borderRadius: 1, pointerEvents: 'none' }} />
-                ))}
+                {/* Wire triangle */}
+                <svg width="168" height="50" style={{ display: 'block' }} draggable={false}>
+                  {/* Mount nail */}
+                  <circle cx="84" cy="7" r="4.5" fill="#c8a84e" />
+                  <circle cx="84" cy="7" r="2.2" fill="#906030" />
+                  {/* Wire */}
+                  <line x1="84" y1="7" x2="5" y2="44" stroke="#b89a48" strokeWidth="1.3" strokeLinecap="round" />
+                  <line x1="84" y1="7" x2="163" y2="44" stroke="#b89a48" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                {/* Wooden bar */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  height: 14,
+                  background: 'linear-gradient(180deg, #c08858 0%, #9B6338 28%, #8B5530 55%, #7a4a26 100%)',
+                  borderRadius: 3,
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(0,0,0,0.18)',
+                }} />
               </div>
               {/* Calendar card */}
               <div
                 onPointerDown={e => e.stopPropagation()}
                 style={{ background: '#fffdf8', borderRadius: 10, boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden', position: 'relative' }}
               >
-                {/* Binding rings */}
-                <div style={{ background: child.theme.accent, padding: '5px 10px', display: 'flex', justifyContent: 'space-around' }}>
-                  {[0,1,2,3].map(i => (
-                    <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(255,255,255,0.4)' }} />
-                  ))}
-                </div>
                 {/* Month navigation */}
                 <div style={{ background: child.theme.bg, padding: '5px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', color: child.theme.accent, fontSize: 16, padding: '0 4px', lineHeight: 1, fontWeight: 700 }}>‹</button>
