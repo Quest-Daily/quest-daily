@@ -96,9 +96,13 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [dragState, setDragState] = useState(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
+  const [questDragState, setQuestDragState] = useState(null) // { questId, section, displayOrder }
   const headerRef = useRef(null)
   const movedRef = useRef(false)
   const noteRefs = useRef({})
+  const questCardRefs = useRef({})
+  const questGhostRef = useRef(null)
+  const questDragInfo = useRef(null)
 
   const headerStickers = state.headerStickers || []
   const headerNotes = state.notePositions || []
@@ -237,6 +241,89 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       }
     })
     setShowAddQuest(false)
+  }
+
+  function currentQuestOrder(part) {
+    if (questDragState?.section === part) {
+      const full = quests[part] || []
+      return questDragState.displayOrder
+        .map(id => full.find(q => q.id === id))
+        .filter(Boolean)
+    }
+    return enabledQuests(part)
+  }
+
+  function startQuestDrag(e, questId, part) {
+    e.preventDefault()
+    e.stopPropagation()
+    const el = questCardRefs.current[questId]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const ghost = el.cloneNode(true)
+    Object.assign(ghost.style, {
+      position: 'fixed', left: rect.left + 'px', top: rect.top + 'px',
+      width: rect.width + 'px', height: rect.height + 'px',
+      margin: 0, pointerEvents: 'none', zIndex: 9000,
+      opacity: '0.92', transform: 'scale(1.05) rotate(1deg)',
+      boxShadow: '0 18px 44px rgba(58,51,64,.22)', borderRadius: '18px', transition: 'none',
+    })
+    document.body.appendChild(ghost)
+    questGhostRef.current = ghost
+    const order = enabledQuests(part).map(q => q.id)
+    questDragInfo.current = { questId, part, order, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top }
+    setQuestDragState({ questId, section: part, displayOrder: order })
+
+    function onMove(ev) {
+      ev.preventDefault()
+      const info = questDragInfo.current
+      if (!info) return
+      const g = questGhostRef.current
+      if (g) {
+        g.style.left = (ev.clientX - info.offsetX) + 'px'
+        g.style.top = (ev.clientY - info.offsetY) + 'px'
+      }
+      let closestId = null, closestDist = Infinity
+      info.order.forEach(id => {
+        if (id === info.questId) return
+        const cardEl = questCardRefs.current[id]
+        if (!cardEl) return
+        const r = cardEl.getBoundingClientRect()
+        const dist = Math.hypot(ev.clientX - (r.left + r.width / 2), ev.clientY - (r.top + r.height / 2))
+        if (dist < closestDist) { closestDist = dist; closestId = id }
+      })
+      if (closestId && closestDist < 150) {
+        const newOrder = [...info.order]
+        const ai = newOrder.indexOf(info.questId)
+        const bi = newOrder.indexOf(closestId)
+        if (ai !== -1 && bi !== -1 && ai !== bi) {
+          ;[newOrder[ai], newOrder[bi]] = [newOrder[bi], newOrder[ai]]
+          info.order = newOrder
+          setQuestDragState(d => ({ ...d, displayOrder: newOrder }))
+        }
+      }
+    }
+
+    function onUp() {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      questGhostRef.current?.remove()
+      questGhostRef.current = null
+      const info = questDragInfo.current
+      if (!info) return
+      const { part: section, order: finalOrder } = info
+      onUpdateQuests(prev => {
+        const disabled = state.disabledQuests || []
+        const full = prev[section] || []
+        const disabledQuests = full.filter(q => disabled.includes(q.id))
+        const reordered = finalOrder.map(id => full.find(q => q.id === id)).filter(Boolean)
+        return { ...prev, [section]: [...reordered, ...disabledQuests] }
+      })
+      questDragInfo.current = null
+      setQuestDragState(null)
+    }
+
+    document.addEventListener('pointermove', onMove, { passive: false })
+    document.addEventListener('pointerup', onUp)
   }
 
   function toggleQuest(dayPart, questId) {
@@ -849,74 +936,86 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         </div>
 
         {/* Quest cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-          gap: 16,
-        }}>
-          {currentQuests.map(quest => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+          {currentQuestOrder(activeTab).map(quest => {
             const done = state.completed[activeTab].includes(quest.id)
+            const isDragging = questDragState?.questId === quest.id
             return (
-              <button
+              <div
                 key={quest.id}
-                onClick={() => toggleQuest(activeTab, quest.id)}
-                className="press-btn"
+                ref={el => { questCardRefs.current[quest.id] = el }}
                 style={{
                   position: 'relative',
-                  background: done ? '#f6efe7' : '#fff',
-                  borderRadius: 18,
-                  padding: '24px 18px 20px',
-                  textAlign: 'center',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: done ? 'none' : '0 3px 10px rgba(58,51,64,.05)',
-                  transition: 'background 0.25s, box-shadow 0.25s',
+                  opacity: isDragging ? 0.25 : 1,
+                  transition: 'opacity 0.15s',
                 }}
               >
-                {/* Check circle */}
-                <div style={{
-                  position: 'absolute',
-                  top: 14,
-                  right: 14,
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  background: done ? '#5b8a5c' : 'transparent',
-                  border: done ? 'none' : `2px solid ${child.theme.dashed}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#fff',
-                  fontSize: 15,
-                  transition: 'background 0.25s, border 0.25s',
-                }}>{done ? '✓' : ''}</div>
-
-                <div style={{ opacity: done ? 0.5 : 1, transition: 'opacity 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 96 }}>
-                  {resolveQuestImage(quest.id, quest.imageKey)
-                    ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt={quest.title} style={{ width: 96, height: 96, objectFit: 'contain' }} />
-                    : <span style={{ fontSize: 46 }}>{quest.icon}</span>
-                  }
+                {/* Drag handle */}
+                <div
+                  onPointerDown={e => startQuestDrag(e, quest.id, activeTab)}
+                  style={{
+                    position: 'absolute', top: 10, left: 10, zIndex: 10,
+                    width: 24, height: 24, borderRadius: 6,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 3, cursor: 'grab', touchAction: 'none',
+                    opacity: 0.3,
+                  }}
+                >
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{ width: 12, height: 2, borderRadius: 1, background: '#3a3340' }} />
+                  ))}
                 </div>
-                <div style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: done ? '#a99f95' : '#3a3340',
-                  textDecoration: done ? 'line-through' : 'none',
-                  margin: '12px 0',
-                  lineHeight: 1.3,
-                  transition: 'color 0.25s',
-                }}>{quest.title}</div>
-                <div style={{
-                  display: 'inline-block',
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: 12,
-                  background: done ? 'transparent' : child.theme.bg,
-                  color: done ? '#b3a99e' : child.theme.textMuted,
-                  padding: done ? '5px 0' : '5px 12px',
-                  borderRadius: 999,
-                  transition: 'background 0.25s',
-                }}>🎟️ {quest.tickets}</div>
-              </button>
+
+                <button
+                  onClick={() => { if (!questDragInfo.current) toggleQuest(activeTab, quest.id) }}
+                  className="press-btn"
+                  style={{
+                    width: '100%',
+                    position: 'relative',
+                    background: done ? '#f6efe7' : '#fff',
+                    borderRadius: 18,
+                    padding: '24px 18px 20px',
+                    textAlign: 'center',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: done ? 'none' : '0 3px 10px rgba(58,51,64,.05)',
+                    transition: 'background 0.25s, box-shadow 0.25s',
+                  }}
+                >
+                  {/* Check circle */}
+                  <div style={{
+                    position: 'absolute', top: 14, right: 14,
+                    width: 30, height: 30, borderRadius: '50%',
+                    background: done ? '#5b8a5c' : 'transparent',
+                    border: done ? 'none' : `2px solid ${child.theme.dashed}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontSize: 15,
+                    transition: 'background 0.25s, border 0.25s',
+                  }}>{done ? '✓' : ''}</div>
+
+                  <div style={{ opacity: done ? 0.5 : 1, transition: 'opacity 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 96 }}>
+                    {resolveQuestImage(quest.id, quest.imageKey)
+                      ? <img src={resolveQuestImage(quest.id, quest.imageKey)} alt={quest.title} style={{ width: 96, height: 96, objectFit: 'contain' }} />
+                      : <span style={{ fontSize: 46 }}>{quest.icon}</span>
+                    }
+                  </div>
+                  <div style={{
+                    fontSize: 15, fontWeight: 600,
+                    color: done ? '#a99f95' : '#3a3340',
+                    textDecoration: done ? 'line-through' : 'none',
+                    margin: '12px 0', lineHeight: 1.3,
+                    transition: 'color 0.25s',
+                  }}>{quest.title}</div>
+                  <div style={{
+                    display: 'inline-block',
+                    fontFamily: "'Space Mono', monospace", fontSize: 12,
+                    background: done ? 'transparent' : child.theme.bg,
+                    color: done ? '#b3a99e' : child.theme.textMuted,
+                    padding: done ? '5px 0' : '5px 12px',
+                    borderRadius: 999, transition: 'background 0.25s',
+                  }}>🎟️ {quest.tickets}</div>
+                </button>
+              </div>
             )
           })}
         </div>
