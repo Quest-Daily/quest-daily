@@ -98,6 +98,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
+  const [calPos, setCalPos] = useState({ x: 88, y: 40 })
+  const [calScale, setCalScale] = useState(1)
   const [questDragState, setQuestDragState] = useState(null) // { questId, section, displayOrder }
   const headerRef = useRef(null)
   const movedRef = useRef(false)
@@ -139,11 +141,43 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     })
   }
 
+  function startCalDrag(e, action = 'move') {
+    e.preventDefault()
+    e.stopPropagation()
+    movedRef.current = false
+    const rect = headerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const centerX = rect.left + (calPos.x / 100) * rect.width
+    const centerY = rect.top + (calPos.y / 100) * rect.height
+    setDragState({
+      type: 'calendar', idx: 0, action,
+      startX: e.clientX, startY: e.clientY,
+      origX: calPos.x, origY: calPos.y,
+      origScale: calScale,
+      origSize: 0, origRotate: 0,
+      centerX, centerY, rect,
+      startAngle: 0,
+      startDist: Math.hypot(e.clientX - centerX, e.clientY - centerY) || 1,
+    })
+  }
+
   function onHeaderPointerMove(e) {
     if (!dragState) return
     e.preventDefault()
     const { type, idx, action, startX, startY, origX, origY, origSize, origScale, origRotate, centerX, centerY, rect, startAngle, startDist } = dragState
     if (Math.hypot(e.clientX - startX, e.clientY - startY) > 4) movedRef.current = true
+    if (type === 'calendar') {
+      if (action === 'move') {
+        setCalPos({
+          x: Math.max(5, Math.min(95, origX + ((e.clientX - startX) / rect.width) * 100)),
+          y: Math.max(5, Math.min(95, origY + ((e.clientY - startY) / rect.height) * 100)),
+        })
+      } else if (action === 'resize') {
+        const ratio = Math.hypot(e.clientX - centerX, e.clientY - centerY) / startDist
+        setCalScale(Math.max(0.5, Math.min(2.5, origScale * ratio)))
+      }
+      return
+    }
     const upd = type === 'sticker'
       ? ch => updateStickerAt(idx, ch)
       : ch => updateNoteAt(idx, ch)
@@ -721,7 +755,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
           )
         })}
 
-        {/* Wall calendar — hanging on the noticeboard */}
+        {/* Wall calendar — draggable and scaleable on the noticeboard */}
         {(() => {
           const { year, month } = calMonth
           const firstDay = new Date(year, month, 1).getDay()
@@ -733,17 +767,29 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
           return (
             <div
               onClick={e => e.stopPropagation()}
-              onPointerDown={e => e.stopPropagation()}
-              style={{ position: 'absolute', top: 64, right: 10, zIndex: 7, width: 168 }}
+              style={{
+                position: 'absolute',
+                left: `${calPos.x}%`, top: `${calPos.y}%`,
+                transform: `translate(-50%, -50%) scale(${calScale})`,
+                transformOrigin: 'center center',
+                zIndex: 7, width: 168,
+                touchAction: 'none',
+              }}
             >
-              {/* Hanging cord */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 52, marginBottom: 0 }}>
+              {/* Hanging cord — drag handle */}
+              <div
+                onPointerDown={e => startCalDrag(e, 'move')}
+                style={{ display: 'flex', justifyContent: 'center', gap: 52, marginBottom: 0, cursor: 'grab', paddingBottom: 2 }}
+              >
                 {[0, 1].map(i => (
-                  <div key={i} style={{ width: 2, height: 12, background: '#b8a8c8', borderRadius: 1 }} />
+                  <div key={i} style={{ width: 2, height: 12, background: '#b8a8c8', borderRadius: 1, pointerEvents: 'none' }} />
                 ))}
               </div>
               {/* Calendar card */}
-              <div style={{ background: '#fffdf8', borderRadius: 10, boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden' }}>
+              <div
+                onPointerDown={e => e.stopPropagation()}
+                style={{ background: '#fffdf8', borderRadius: 10, boxShadow: '0 6px 22px rgba(58,51,64,.18), 0 2px 6px rgba(58,51,64,.08)', overflow: 'hidden', position: 'relative' }}
+              >
                 {/* Binding rings */}
                 <div style={{ background: child.theme.accent, padding: '5px 10px', display: 'flex', justifyContent: 'space-around' }}>
                   {[0,1,2,3].map(i => (
@@ -788,6 +834,16 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                     })}
                   </div>
                 </div>
+                {/* Resize handle */}
+                <div
+                  onPointerDown={e => { e.stopPropagation(); startCalDrag(e, 'resize') }}
+                  style={{
+                    position: 'absolute', bottom: -10, right: -10,
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: '#fff', border: '2.5px solid #3a3340',
+                    cursor: 'nwse-resize', zIndex: 30, touchAction: 'none',
+                  }}
+                />
               </div>
             </div>
           )
