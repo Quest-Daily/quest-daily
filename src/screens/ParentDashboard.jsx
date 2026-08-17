@@ -125,7 +125,7 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Stat label="Tickets" value={state.tickets} icon="🎟️" bg={child.theme.bg} color={child.theme.accent} />
+                <Stat label="Tickets" value={state.tickets} icon="⭐" bg={child.theme.bg} color={child.theme.accent} />
                 <Stat label="Quests done" value={`${totalDone}/${allQuests.length}`} icon="✓" bg="#e7f0e4" color="#5b8a5c" />
                 <Stat label="Streak" value={`${state.streak} days`} icon="🔥" bg="#fce9d6" color="#c2702a" />
                 <Stat label="Week" value={`${state.weekDays.filter(Boolean).length}/7`} icon="📅" bg="#faf0ec" color="#8a7f86" />
@@ -617,7 +617,7 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
                       fontFamily: "'Space Mono', monospace", fontSize: 11,
                       color: '#9a8fa6', background: '#f6f0f9',
                       padding: '3px 9px', borderRadius: 999, flexShrink: 0,
-                    }}>{quest.tickets}🎟️</span>
+                    }}>{quest.tickets} tickets</span>
 
                     {CHILD_ORDER.map(childId => {
                       const disabled = childState[childId]?.disabledQuests || []
@@ -1183,7 +1183,7 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
                         fontFamily: "'Space Mono', monospace", fontSize: 11,
                         color: '#9a8fa6', background: '#fff',
                         padding: '3px 9px', borderRadius: 999, flexShrink: 0,
-                      }}>{item.ticketPrice} 🎟️</span>
+                      }}>{item.ticketPrice} tickets</span>
                       <button
                         onClick={() => removeItem(id, item.id)}
                         style={{

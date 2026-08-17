@@ -121,7 +121,7 @@ export default function FamilyHome({ childState, onSelectChild, onParentView, on
                     fontSize: 14,
                     letterSpacing: '0.04em',
                     color: child.theme.textMuted,
-                  }}>🎟️ {state.tickets} {state.tickets === 1 ? 'ticket' : 'tickets'}</div>
+                  }}>{state.tickets} {state.tickets === 1 ? 'ticket' : 'tickets'}</div>
                 </TicketShape>
               </button>
             )

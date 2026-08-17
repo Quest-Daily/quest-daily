@@ -9,7 +9,7 @@ const RECURRENCE_OPTIONS = [
   { key: 'daily',   label: 'Every day' },
   { key: 'weekly',  label: 'Specific days' },
   { key: 'monthly', label: 'Monthly' },
-  { key: 'once',    label: 'One-time date' },
+  { key: 'once',    label: 'Assign a specific date' },
 ]
 
 function todayISO() {
@@ -142,21 +142,22 @@ export default function AddQuestModal({ defaultSections = ['morning'], onSave, o
         {/* Recurrence */}
         <div style={{ marginBottom: recurrence === 'daily' ? 22 : 12 }}>
           <span style={labelStyle}>How often?</span>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {RECURRENCE_OPTIONS.map(opt => (
               <button
                 key={opt.key}
                 type="button"
                 onClick={() => setRecurrence(opt.key)}
                 style={{
-                  flex: 1, minWidth: 'max-content', padding: '9px 10px', borderRadius: 12,
+                  padding: '10px 8px', borderRadius: 12,
                   border: `2px solid ${recurrence === opt.key ? '#a8689a' : '#e0d4e8'}`,
                   background: recurrence === opt.key ? '#efe2f5' : '#fff',
                   color: recurrence === opt.key ? '#a8689a' : '#9a8fa6',
                   cursor: 'pointer',
                   fontFamily: "'Space Mono', monospace", fontSize: 10,
                   fontWeight: recurrence === opt.key ? 700 : 400,
-                  letterSpacing: '0.04em', transition: 'all 0.15s', whiteSpace: 'nowrap',
+                  letterSpacing: '0.04em', transition: 'all 0.15s',
+                  textAlign: 'center',
                 }}
               >{opt.label}</button>
             ))}
@@ -217,33 +218,41 @@ export default function AddQuestModal({ defaultSections = ['morning'], onSave, o
           </div>
         )}
 
-        {/* Icon + title + tickets */}
+        {/* Title + icon + tickets */}
         <div style={{ marginBottom: 18 }}>
-          <span style={labelStyle}>Quest details</span>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <input
-              value={icon}
-              onChange={e => setIcon(e.target.value)}
-              placeholder="⭐"
-              maxLength={2}
-              style={{ ...inputStyle, width: 56, textAlign: 'center', fontSize: 24, padding: '10px 6px', flexShrink: 0 }}
-            />
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Quest name"
-              autoFocus
-              style={{ ...inputStyle, flex: 1, minWidth: 0 }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
+            {/* Quest name */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={labelStyle}>Quest name</span>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Quest name"
+                autoFocus
+                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            {/* Quest icon */}
+            <div style={{ flexShrink: 0 }}>
+              <span style={labelStyle}>Icon</span>
+              <input
+                value={icon}
+                onChange={e => setIcon(e.target.value)}
+                placeholder="⭐"
+                maxLength={2}
+                style={{ ...inputStyle, width: 56, textAlign: 'center', fontSize: 24, padding: '10px 6px', display: 'block' }}
+              />
+            </div>
+            {/* Tickets */}
+            <div style={{ flexShrink: 0 }}>
+              <span style={labelStyle}>Tickets</span>
               <input
                 type="number"
                 value={tickets}
                 onChange={e => setTickets(Number(e.target.value))}
                 min={1} max={10}
-                style={{ ...inputStyle, width: 54, textAlign: 'center', padding: '11px 8px' }}
+                style={{ ...inputStyle, width: 56, textAlign: 'center', padding: '11px 8px', display: 'block' }}
               />
-              <span style={{ fontSize: 13, color: '#9a8fa6', whiteSpace: 'nowrap' }}>🎟️</span>
             </div>
           </div>
         </div>
@@ -272,7 +281,7 @@ export default function AddQuestModal({ defaultSections = ['morning'], onSave, o
                 color: '#a8689a', cursor: 'pointer',
                 fontFamily: "'Hanken Grotesk', sans-serif",
               }}
-            >{showPicker ? 'Close' : '🖼️ Choose image'}</button>
+            >{showPicker ? 'Close' : 'Choose image'}</button>
             {imageKey && (
               <button
                 type="button"

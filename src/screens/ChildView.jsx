@@ -750,7 +750,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
               letterSpacing: '0.04em', padding: '12px 24px', borderRadius: 999,
               boxShadow: `0 3px 12px ${child.theme.shadow}`,
             }}
-          >🎟️ {state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
+          >{state.tickets} {state.tickets === 1 ? 'TICKET' : 'TICKETS'}</div>
         </div>
       </div>
 
@@ -1043,7 +1043,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                     color: done ? '#b3a99e' : child.theme.textMuted,
                     padding: done ? '5px 0' : '5px 12px',
                     borderRadius: 999, transition: 'background 0.25s',
-                  }}>🎟️ {quest.tickets}</div>
+                  }}>{quest.tickets} tickets</div>
                 </button>
               </div>
             )
@@ -1224,7 +1224,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                         padding: '8px 14px',
                         borderRadius: 999,
                       }}>
-                        {log.onTime ? 'On time · +1 🎟️' : 'Late · try again'}
+                        {log.onTime ? 'On time · +1 ticket' : 'Late · try again'}
                       </div>
                     </>
                   ) : (
@@ -1271,7 +1271,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#3a3340' }}>
-              On time all week → <span style={{ color: child.theme.accent }}>10 bonus tickets 🎟️</span>
+              On time all week → <span style={{ color: child.theme.accent }}>10 bonus tickets</span>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
               {['M','T','W','T','F','S','S'].map((day, i) => (
