@@ -98,8 +98,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
-  const [calPos, setCalPos] = useState({ x: 88, y: 40 })
-  const [calScale, setCalScale] = useState(1)
+  const [calPos, setCalPos] = useState({ x: 82, y: 52 })
+  const [calScale, setCalScale] = useState(1.5)
   const [questDragState, setQuestDragState] = useState(null) // { questId, section, displayOrder }
   const headerRef = useRef(null)
   const movedRef = useRef(false)

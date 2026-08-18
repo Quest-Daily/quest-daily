@@ -203,7 +203,6 @@ export function createInitialState() {
       streak: 5,
       weekDays: [true, true, true, true, true, false, false],
       headerStickers: [
-        { id: 'unicorn', x: 12, y: 22, size: 72, rotate: -12 },
         { id: 'heart',   x: 87, y: 10, size: 68, rotate:   8 },
         { id: 'star',    x: 30, y: 80, size: 60, rotate:   5 },
       ],
@@ -222,7 +221,6 @@ export function createInitialState() {
     felix: {
       ...makeInitialChildState('felix'),
       headerStickers: [
-        { id: 'bunny',   x: 12, y: 22, size: 72, rotate: -12 },
         { id: 'rainbow', x: 87, y: 10, size: 68, rotate:   8 },
         { id: 'art',     x: 30, y: 80, size: 60, rotate:   5 },
       ],
