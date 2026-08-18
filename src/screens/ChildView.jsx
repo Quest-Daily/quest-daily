@@ -478,7 +478,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       childName: child.name,
       sections: [{ label: DAY_PART_LABELS[part], quests: enabledQuests(part) }],
       allDay: false,
-      notes: headerNotes.filter(n => !n.acknowledged && n.text),
+      notes: headerNotes.filter(n => n.text),
     })
   }
 
@@ -487,7 +487,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       childName: child.name,
       sections: DAY_PARTS.map(part => ({ label: DAY_PART_LABELS[part], quests: enabledQuests(part) })),
       allDay: true,
-      notes: headerNotes.filter(n => !n.acknowledged && n.text),
+      notes: headerNotes.filter(n => n.text),
     })
   }
 
