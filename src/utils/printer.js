@@ -77,7 +77,7 @@ export function printQuestComplete({ childName, questTitle, ticketsEarned, total
 
 export function printSectionDone() {}
 
-export function printQuestSheet({ childName, sections, allDay }) {
+export function printQuestSheet({ childName, sections, allDay, notes }) {
   function nowDate() {
     return new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   }
@@ -100,6 +100,12 @@ export function printQuestSheet({ childName, sections, allDay }) {
     ${Array(4).fill('<div style="width:32px;height:32px;border:1.5px dashed #aaa;border-radius:50%"></div>').join('')}
   </div>`
 
+  const notesBlock = notes && notes.length > 0 ? `
+    <hr class="dash">
+    <div class="xs b" style="letter-spacing:0.12em;margin:5px 0 3px">📝 REMINDERS</div>
+    ${notes.map(n => `<div style="padding:3px 0;border-bottom:1px dashed #ddd;font-size:11px">• ${n.text}</div>`).join('')}
+  ` : ''
+
   openReceipt(`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
       ${smallLogo}
@@ -113,6 +119,7 @@ export function printQuestSheet({ childName, sections, allDay }) {
     <div class="c sans xs muted">${nowDate()}</div>
     <hr class="dash">
     ${sectionBlocks}
+    ${notesBlock}
     <hr class="solid">
     <div class="sans xs" style="margin:3px 0">Tickets today: <span style="display:inline-block;width:70px;border-bottom:1px solid #555;vertical-align:bottom"></span></div>
     ${allDay ? `<div class="sans xs" style="margin:3px 0">Total tickets: <span style="display:inline-block;width:72px;border-bottom:1px solid #555;vertical-align:bottom"></span></div>` : ''}
