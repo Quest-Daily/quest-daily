@@ -113,22 +113,19 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const headerStickers = state.headerStickers || []
   const allNotes = state.notePositions || []
 
-  // Filter notes to only those scheduled for today
-  function isTodayNote(note) {
+  // Filter notes to those scheduled for the currently viewed date
+  function isNoteOnDate(note, dateISO) {
     if (!note.recurrence || note.recurrence === 'daily') return true
     if (note.recurrence === 'weekly') {
       const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-      const todayKey = dayKeys[new Date().getDay()]
-      return (note.days || []).includes(todayKey)
+      const d = dateISO ? new Date(dateISO + 'T00:00:00') : new Date()
+      return (note.days || []).includes(dayKeys[d.getDay()])
     }
-    if (note.recurrence === 'once') {
-      const d = new Date()
-      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      return note.date === iso
-    }
+    if (note.recurrence === 'once') return note.date === dateISO
     return true
   }
-  const headerNotes = allNotes.filter(isTodayNote)
+  const effectiveDate = viewingDay || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
+  const headerNotes = allNotes.filter(n => isNoteOnDate(n, effectiveDate))
 
   function updateStickerAt(idx, changes) {
     onUpdate(s => ({ ...s, headerStickers: (s.headerStickers || []).map((st, i) => i === idx ? { ...st, ...changes } : st) }))
@@ -606,7 +603,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       >
         {/* Notes */}
         {allNotes.map((note, idx) => {
-          if (!isTodayNote(note)) return null
+          if (!isNoteOnDate(note, effectiveDate)) return null
           const isSel = selected?.type === 'note' && selected?.idx === idx
           const scale = note.scale || 1
           const w = Math.round(190 * scale)
