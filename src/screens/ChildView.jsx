@@ -1465,7 +1465,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
             <Avatar child={child} size={58} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: '#3a3340' }}>{child.name} &amp; Co</div>
-              <div style={{ fontSize: 14, color: '#9a6b76', marginTop: 2 }}>Spend your tickets on your own picks</div>
+              <div style={{ fontSize: 14, color: '#9a6b76', marginTop: 2 }}>Rewards store</div>
             </div>
             <button className="press-btn" style={{
               background: '#3a3340', color: '#fff',
