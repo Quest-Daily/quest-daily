@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar'
 import TicketShape from '../components/TicketShape'
 import { printQuestComplete, printQuestSheet } from '../utils/printer'
 import AddQuestModal from '../components/AddQuestModal'
+import NoteScheduleModal from '../components/NoteScheduleModal'
 
 function spawnConfetti(centerX, centerY) {
   const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
@@ -96,6 +97,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [dragState, setDragState] = useState(null)
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
+  const [showNoteSchedule, setShowNoteSchedule] = useState(null) // note idx or null
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
   const [calPos, setCalPos] = useState({ x: 82, y: 52 })
@@ -109,7 +111,24 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const questDragInfo = useRef(null)
 
   const headerStickers = state.headerStickers || []
-  const headerNotes = state.notePositions || []
+  const allNotes = state.notePositions || []
+
+  // Filter notes to only those scheduled for today
+  function isTodayNote(note) {
+    if (!note.recurrence || note.recurrence === 'daily') return true
+    if (note.recurrence === 'weekly') {
+      const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+      const todayKey = dayKeys[new Date().getDay()]
+      return (note.days || []).includes(todayKey)
+    }
+    if (note.recurrence === 'once') {
+      const d = new Date()
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      return note.date === iso
+    }
+    return true
+  }
+  const headerNotes = allNotes.filter(isTodayNote)
 
   function updateStickerAt(idx, changes) {
     onUpdate(s => ({ ...s, headerStickers: (s.headerStickers || []).map((st, i) => i === idx ? { ...st, ...changes } : st) }))
@@ -210,16 +229,16 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   }
 
   function addNote() {
-    const color = NOTE_COLORS[headerNotes.length % NOTE_COLORS.length]
+    const color = NOTE_COLORS[allNotes.length % NOTE_COLORS.length]
     onUpdate(s => ({
       ...s,
       notePositions: [...(s.notePositions || []), { id: `note-${Date.now()}`, x: 50, y: 50, scale: 1, rotate: -1, text: 'Tap to edit...', color }]
     }))
-    setSelected({ type: 'note', idx: headerNotes.length })
+    setSelected({ type: 'note', idx: allNotes.length })
   }
 
   function acknowledgeNote(idx, buttonEl) {
-    const note = headerNotes[idx]
+    const note = allNotes[idx]
     if (!note || note.acknowledged) return
 
     // Confetti from the button
@@ -586,7 +605,8 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         onPointerDown={e => { if (e.target === e.currentTarget) setSelected(null) }}
       >
         {/* Notes */}
-        {headerNotes.map((note, idx) => {
+        {allNotes.map((note, idx) => {
+          if (!isTodayNote(note)) return null
           const isSel = selected?.type === 'note' && selected?.idx === idx
           const scale = note.scale || 1
           const w = Math.round(190 * scale)
@@ -691,6 +711,19 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   <DeleteBtn onDelete={deleteSelected} />
                   <ResizeHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'resize') }} />
                   <RotateHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'rotate') }} />
+                  {/* Schedule button */}
+                  <button
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={e => { e.stopPropagation(); setShowNoteSchedule(idx) }}
+                    title={note.recurrence === 'weekly' ? `Shown on: ${(note.days || []).map(d => d[0].toUpperCase() + d.slice(1)).join(', ')}` : note.recurrence === 'once' ? `One-time: ${note.date}` : 'Every day'}
+                    style={{
+                      position: 'absolute', bottom: 1, left: 1,
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: note.recurrence && note.recurrence !== 'daily' ? child.theme.accent : '#c8b8d8',
+                      color: '#fff', border: 'none', cursor: 'pointer', fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30,
+                    }}
+                  >📅</button>
                 </>
               )}
             </div>
@@ -1611,6 +1644,19 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         defaultSections={[activeTab]}
         onSave={handleAddQuest}
         onClose={() => setShowAddQuest(false)}
+      />
+    )}
+
+    {showNoteSchedule !== null && allNotes[showNoteSchedule] && (
+      <NoteScheduleModal
+        note={allNotes[showNoteSchedule]}
+        accentColor={child.theme.accent}
+        bgColor={child.theme.bg}
+        onSave={schedule => {
+          updateNoteAt(showNoteSchedule, schedule)
+          setShowNoteSchedule(null)
+        }}
+        onClose={() => setShowNoteSchedule(null)}
       />
     )}
     </>
