@@ -53,6 +53,16 @@ import medicationAM from '../medication_AM.png'
 import medicationNight from '../medication_night.png'
 import medicationPmFifi from '../medication_pm_fifi.png'
 import sportFoldedUniform from '../sport_folded_uniform.png'
+import bedtimeStoryColours from '../bedtime_story_colours.png'
+import binsToStreetNew from '../bins_to_street.png'
+import blueSoccerGear from '../blue_soccer_gear.png'
+import feedBailey from '../feed_bailey.png'
+import getIntoBedNew from '../get_into_bed.png'
+import goToBed from '../go_to_bed.png'
+import library from '../library.png'
+import packUnpackDishwasher from '../pack_unpack_dishwasher.png'
+import readyForBed from '../ready_for_bed.png'
+import walkBailey from '../walk_bailey.png'
 
 // Reward stickers
 import soccerTraining from '../soccer-training.png'
@@ -167,6 +177,16 @@ export const ALL_QUEST_IMAGES = [
   { key: 'medication-night',         src: medicationNight,          label: 'Night meds' },
   { key: 'medication-pm',            src: medicationPmFifi,         label: 'Afternoon meds' },
   { key: 'sport-folded-uniform',     src: sportFoldedUniform,       label: 'Folded uniform' },
+  { key: 'bedtime-story-colours',    src: bedtimeStoryColours,      label: 'Bedtime story' },
+  { key: 'bins-to-street-new',       src: binsToStreetNew,          label: 'Bins to street' },
+  { key: 'blue-soccer-gear',         src: blueSoccerGear,           label: 'Blue soccer gear' },
+  { key: 'feed-bailey',              src: feedBailey,               label: 'Feed Bailey' },
+  { key: 'get-into-bed-new',         src: getIntoBedNew,            label: 'Get into bed' },
+  { key: 'go-to-bed',               src: goToBed,                  label: 'Go to bed' },
+  { key: 'library',                  src: library,                  label: 'Library' },
+  { key: 'pack-unpack-dishwasher',   src: packUnpackDishwasher,     label: 'Pack/unpack dishwasher' },
+  { key: 'ready-for-bed',            src: readyForBed,              label: 'Ready for bed' },
+  { key: 'walk-bailey',              src: walkBailey,               label: 'Walk Bailey' },
   // Rewards
   { key: 'soccer-training',           src: soccerTraining,           label: 'Soccer training' },
   { key: 'soccer-game',               src: soccerGame,               label: 'Soccer game' },
