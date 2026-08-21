@@ -63,6 +63,7 @@ import library from '../library.png'
 import packUnpackDishwasher from '../pack_unpack_dishwasher.png'
 import readyForBed from '../ready_for_bed.png'
 import walkBailey from '../walk_bailey.png'
+import outTheDoor from '../out-the=door.png'
 
 // Reward stickers
 import soccerTraining from '../soccer-training.png'
@@ -187,6 +188,7 @@ export const ALL_QUEST_IMAGES = [
   { key: 'pack-unpack-dishwasher',   src: packUnpackDishwasher,     label: 'Pack/unpack dishwasher' },
   { key: 'ready-for-bed',            src: readyForBed,              label: 'Ready for bed' },
   { key: 'walk-bailey',              src: walkBailey,               label: 'Walk Bailey' },
+  { key: 'out-the-door',            src: outTheDoor,               label: 'Out the door' },
   // Rewards
   { key: 'soccer-training',           src: soccerTraining,           label: 'Soccer training' },
   { key: 'soccer-game',               src: soccerGame,               label: 'Soccer game' },
