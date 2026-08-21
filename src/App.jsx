@@ -69,6 +69,7 @@ export default function App() {
       const saved = localStorage.getItem('quest-daily-quests')
       if (saved) {
         const parsed = JSON.parse(saved)
+        if (!parsed.routineOverrides) parsed.routineOverrides = {}
         if (!parsed.sideQuestOverrides) {
           // migrate old sideQuestImageKeys to sideQuestOverrides
           const oldKeys = parsed.sideQuestImageKeys || {}

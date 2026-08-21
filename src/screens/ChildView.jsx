@@ -8,8 +8,9 @@ import TicketShape from '../components/TicketShape'
 import { printQuestComplete, printQuestSheet } from '../utils/printer'
 import AddQuestModal from '../components/AddQuestModal'
 import NoteScheduleModal from '../components/NoteScheduleModal'
-import QuestIconPickerModal from '../components/QuestIconPickerModal'
+import QuestEditModal from '../components/QuestEditModal'
 import SideQuestEditModal from '../components/SideQuestEditModal'
+import RoutineEditModal from '../components/RoutineEditModal'
 
 function spawnConfetti(centerX, centerY) {
   const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
@@ -100,8 +101,9 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [showNoteSchedule, setShowNoteSchedule] = useState(null) // note idx or null
-  const [showIconPicker, setShowIconPicker] = useState(null) // { questId } or null
+  const [showQuestEdit, setShowQuestEdit] = useState(null) // { questId, section } or null
   const [showSideQuestEdit, setShowSideQuestEdit] = useState(null) // side quest id or null
+  const [showRoutineEdit, setShowRoutineEdit] = useState(null) // routine id or null
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
   const [calPos, setCalPos] = useState({ x: 82, y: 52 })
@@ -1183,19 +1185,15 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   ))}
                 </div>
 
-                {/* Change icon button */}
+                {/* Tap image to edit quest */}
                 <button
-                  onClick={e => { e.stopPropagation(); setShowIconPicker({ questId: quest.id }) }}
-                  title="Change icon"
+                  onClick={e => { e.stopPropagation(); setShowQuestEdit({ questId: quest.id, section: activeTab }) }}
+                  title="Edit quest"
                   style={{
-                    position: 'absolute', bottom: 12, left: 12, zIndex: 10,
-                    width: 26, height: 26, borderRadius: '50%',
-                    background: '#f0e8e0', border: 'none',
-                    cursor: 'pointer', fontSize: 13,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#9a8fa6', opacity: 0.7,
+                    position: 'absolute', top: 24, left: 0, right: 0, height: 110,
+                    zIndex: 10, background: 'transparent', border: 'none', cursor: 'pointer',
                   }}
-                >🖼️</button>
+                />
 
                 <button
                   onClick={() => { if (!questDragInfo.current && !viewingDay) toggleQuest(activeTab, quest.id) }}
@@ -1395,25 +1393,32 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                 padding: 24,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 52, height: 52,
-                    borderRadius: '50%',
-                    background: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 26, flexShrink: 0,
-                  }}>
-                    {resolveQuestImage(routine.id, routine.imageKey)
-                      ? <img src={resolveQuestImage(routine.id, routine.imageKey)} alt={routine.title} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                  <button
+                    onClick={() => setShowRoutineEdit(routine.id)}
+                    title="Edit routine"
+                    style={{
+                      width: 52, height: 52,
+                      borderRadius: '50%',
+                      background: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 26, flexShrink: 0,
+                      border: 'none', cursor: 'pointer', padding: 0,
+                    }}
+                  >
+                    {resolveQuestImage(routine.id, (quests.routineOverrides?.[routine.id] || {}).imageKey ?? routine.imageKey)
+                      ? <img src={resolveQuestImage(routine.id, (quests.routineOverrides?.[routine.id] || {}).imageKey ?? routine.imageKey)} alt={routine.title} style={{ width: 40, height: 40, objectFit: 'contain' }} />
                       : routine.icon
                     }
-                  </div>
+                  </button>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: '#3a3340' }}>{routine.title}</div>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: '#3a3340' }}>
+                      {(quests.routineOverrides?.[routine.id] || {}).title ?? routine.title}
+                    </div>
                     <div style={{
                       fontFamily: "'Space Mono', monospace",
                       fontSize: 12,
                       color: routine.targetColor,
-                    }}>Target · {routine.target} {routine.ampm}</div>
+                    }}>Target · {(quests.routineOverrides?.[routine.id] || {}).target ?? routine.target} {(quests.routineOverrides?.[routine.id] || {}).ampm ?? routine.ampm}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
@@ -1719,32 +1724,56 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       )
     })()}
 
-    {showIconPicker && (() => {
+    {showQuestEdit && (() => {
       const allSections = ['morning', 'afternoon', 'evening']
       let foundQuest = null
+      let foundSection = showQuestEdit.section
       for (const s of allSections) {
-        foundQuest = quests[s]?.find(q => q.id === showIconPicker.questId)
-        if (foundQuest) break
+        const q = quests[s]?.find(q => q.id === showQuestEdit.questId)
+        if (q) { foundQuest = q; foundSection = s; break }
       }
       if (!foundQuest) return null
       return (
-        <QuestIconPickerModal
+        <QuestEditModal
           quest={foundQuest}
           accentColor={child.theme.accent}
           bgColor={child.theme.bg}
-          onSave={imageKey => {
+          onSave={({ title, icon, tickets, imageKey }) => {
             onUpdateQuests(prev => {
               const next = { ...prev }
               for (const s of allSections) {
-                if (next[s]?.some(q => q.id === showIconPicker.questId)) {
-                  next[s] = next[s].map(q => q.id === showIconPicker.questId ? { ...q, imageKey: imageKey ?? undefined } : q)
+                if (next[s]?.some(q => q.id === showQuestEdit.questId)) {
+                  next[s] = next[s].map(q => q.id === showQuestEdit.questId
+                    ? { ...q, title, icon, tickets, imageKey }
+                    : q)
                 }
               }
               return next
             })
-            setShowIconPicker(null)
+            setShowQuestEdit(null)
           }}
-          onClose={() => setShowIconPicker(null)}
+          onClose={() => setShowQuestEdit(null)}
+        />
+      )
+    })()}
+
+    {showRoutineEdit && (() => {
+      const routine = ROUTINES.find(r => r.id === showRoutineEdit)
+      if (!routine) return null
+      const ov = quests.routineOverrides?.[routine.id] || {}
+      return (
+        <RoutineEditModal
+          routine={{ ...routine, title: ov.title ?? routine.title, target: ov.target ?? routine.target, ampm: ov.ampm ?? routine.ampm, imageKey: ov.imageKey }}
+          accentColor={child.theme.accent}
+          bgColor={child.theme.bg}
+          onSave={({ title, target, ampm, imageKey }) => {
+            onUpdateQuests(prev => ({
+              ...prev,
+              routineOverrides: { ...(prev.routineOverrides || {}), [routine.id]: { title, target, ampm, imageKey } },
+            }))
+            setShowRoutineEdit(null)
+          }}
+          onClose={() => setShowRoutineEdit(null)}
         />
       )
     })()}

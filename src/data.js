@@ -54,6 +54,7 @@ export const QUESTS = {
   afternoon: [],
   evening: [],
   sideQuestOverrides: {},
+  routineOverrides: {},
 }
 
 export const SIDE_QUESTS = [
