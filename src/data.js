@@ -53,7 +53,7 @@ export const QUESTS = {
   morning: [],
   afternoon: [],
   evening: [],
-  sideQuestImageKeys: {},
+  sideQuestOverrides: {},
 }
 
 export const SIDE_QUESTS = [

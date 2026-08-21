@@ -9,6 +9,7 @@ import { printQuestComplete, printQuestSheet } from '../utils/printer'
 import AddQuestModal from '../components/AddQuestModal'
 import NoteScheduleModal from '../components/NoteScheduleModal'
 import QuestIconPickerModal from '../components/QuestIconPickerModal'
+import SideQuestEditModal from '../components/SideQuestEditModal'
 
 function spawnConfetti(centerX, centerY) {
   const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
@@ -100,6 +101,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [showNoteSchedule, setShowNoteSchedule] = useState(null) // note idx or null
   const [showIconPicker, setShowIconPicker] = useState(null) // { questId } or null
+  const [showSideQuestEdit, setShowSideQuestEdit] = useState(null) // side quest id or null
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
   const [calPos, setCalPos] = useState({ x: 82, y: 52 })
@@ -1273,12 +1275,14 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         }}>
           {SIDE_QUESTS.map(sq => {
             const claimed = state.claimedSideQuests.includes(sq.id)
-            const sqImageKey = quests.sideQuestImageKeys?.[sq.id]
+            const overrides = quests.sideQuestOverrides?.[sq.id] || {}
+            const sqTitle = overrides.title ?? sq.title
+            const sqTickets = overrides.tickets ?? sq.tickets
+            const sqImageKey = overrides.imageKey
             return (
               <div
                 key={sq.id}
                 style={{
-                  position: 'relative',
                   filter: claimed
                     ? 'drop-shadow(0 3px 4px rgba(58,51,64,.08))'
                     : 'drop-shadow(0 9px 11px rgba(58,51,64,.16))',
@@ -1286,34 +1290,30 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   transition: 'opacity 0.3s, filter 0.3s',
                 }}
               >
-                {/* Change icon button */}
-                <button
-                  onClick={() => setShowIconPicker({ questId: sq.id, isSideQuest: true })}
-                  title="Change icon"
-                  style={{
-                    position: 'absolute', top: 10, left: 10, zIndex: 10,
-                    width: 26, height: 26, borderRadius: '50%',
-                    background: '#f0e8e0', border: 'none',
-                    cursor: 'pointer', fontSize: 13,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#9a8fa6', opacity: 0.7,
-                  }}
-                >🖼️</button>
-
                 <TicketShape bg={sq.bg} stubHeight={64}>
                   <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 84 }}>
+                    <button
+                      onClick={() => setShowSideQuestEdit(sq.id)}
+                      title="Edit side quest"
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        height: 84, width: '100%',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        borderRadius: 12, padding: 0,
+                        transition: 'opacity 0.15s',
+                      }}
+                    >
                       {resolveQuestImage(sq.id, sqImageKey)
-                        ? <img src={resolveQuestImage(sq.id, sqImageKey)} alt={sq.title} style={{ width: 84, height: 84, objectFit: 'contain' }} />
+                        ? <img src={resolveQuestImage(sq.id, sqImageKey)} alt={sqTitle} style={{ width: 84, height: 84, objectFit: 'contain' }} />
                         : <span style={{ fontSize: 40 }}>{sq.icon}</span>
                       }
-                    </div>
+                    </button>
                     <div style={{
                       fontFamily: "'DM Serif Display', serif",
                       fontSize: 22,
                       color: '#3a3340',
                       margin: '10px 0 14px',
-                    }}>{sq.title}</div>
+                    }}>{sqTitle}</div>
                     <div style={{
                       display: 'inline-block',
                       background: '#fff',
@@ -1322,7 +1322,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                       fontSize: 12,
                       padding: '6px 12px',
                       borderRadius: 999,
-                    }}>{sq.tickets} TICKETS</div>
+                    }}>{sqTickets} TICKETS</div>
                   </div>
                   <div style={{
                     height: 64,
@@ -1689,28 +1689,37 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
       />
     )}
 
-    {showIconPicker && (() => {
-      if (showIconPicker.isSideQuest) {
-        const sq = SIDE_QUESTS.find(s => s.id === showIconPicker.questId)
-        if (!sq) return null
-        const currentImageKey = quests.sideQuestImageKeys?.[sq.id]
-        return (
-          <QuestIconPickerModal
-            quest={{ id: sq.id, imageKey: currentImageKey }}
-            accentColor={child.theme.accent}
-            bgColor={child.theme.bg}
-            onSave={imageKey => {
-              onUpdateQuests(prev => ({
-                ...prev,
-                sideQuestImageKeys: { ...(prev.sideQuestImageKeys || {}), [sq.id]: imageKey || undefined },
-              }))
-              setShowIconPicker(null)
-            }}
-            onClose={() => setShowIconPicker(null)}
-          />
-        )
+    {showSideQuestEdit && (() => {
+      const sq = SIDE_QUESTS.find(s => s.id === showSideQuestEdit)
+      if (!sq) return null
+      const overrides = quests.sideQuestOverrides?.[sq.id] || {}
+      const sqForModal = {
+        ...sq,
+        title: overrides.title ?? sq.title,
+        tickets: overrides.tickets ?? sq.tickets,
+        imageKey: overrides.imageKey,
       }
+      return (
+        <SideQuestEditModal
+          sideQuest={sqForModal}
+          accentColor={child.theme.accent}
+          bgColor={child.theme.bg}
+          onSave={({ title, tickets, imageKey }) => {
+            onUpdateQuests(prev => ({
+              ...prev,
+              sideQuestOverrides: {
+                ...(prev.sideQuestOverrides || {}),
+                [sq.id]: { title, tickets, imageKey },
+              },
+            }))
+            setShowSideQuestEdit(null)
+          }}
+          onClose={() => setShowSideQuestEdit(null)}
+        />
+      )
+    })()}
 
+    {showIconPicker && (() => {
       const allSections = ['morning', 'afternoon', 'evening']
       let foundQuest = null
       for (const s of allSections) {
