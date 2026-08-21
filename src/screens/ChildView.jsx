@@ -1273,10 +1273,12 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         }}>
           {SIDE_QUESTS.map(sq => {
             const claimed = state.claimedSideQuests.includes(sq.id)
+            const sqImageKey = quests.sideQuestImageKeys?.[sq.id]
             return (
               <div
                 key={sq.id}
                 style={{
+                  position: 'relative',
                   filter: claimed
                     ? 'drop-shadow(0 3px 4px rgba(58,51,64,.08))'
                     : 'drop-shadow(0 9px 11px rgba(58,51,64,.16))',
@@ -1284,11 +1286,25 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   transition: 'opacity 0.3s, filter 0.3s',
                 }}
               >
+                {/* Change icon button */}
+                <button
+                  onClick={() => setShowIconPicker({ questId: sq.id, isSideQuest: true })}
+                  title="Change icon"
+                  style={{
+                    position: 'absolute', top: 10, left: 10, zIndex: 10,
+                    width: 26, height: 26, borderRadius: '50%',
+                    background: '#f0e8e0', border: 'none',
+                    cursor: 'pointer', fontSize: 13,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#9a8fa6', opacity: 0.7,
+                  }}
+                >🖼️</button>
+
                 <TicketShape bg={sq.bg} stubHeight={64}>
                   <div style={{ padding: '24px 18px 18px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 84 }}>
-                      {resolveQuestImage(sq.id, sq.imageKey)
-                        ? <img src={resolveQuestImage(sq.id, sq.imageKey)} alt={sq.title} style={{ width: 84, height: 84, objectFit: 'contain' }} />
+                      {resolveQuestImage(sq.id, sqImageKey)
+                        ? <img src={resolveQuestImage(sq.id, sqImageKey)} alt={sq.title} style={{ width: 84, height: 84, objectFit: 'contain' }} />
                         : <span style={{ fontSize: 40 }}>{sq.icon}</span>
                       }
                     </div>
@@ -1674,6 +1690,27 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
     )}
 
     {showIconPicker && (() => {
+      if (showIconPicker.isSideQuest) {
+        const sq = SIDE_QUESTS.find(s => s.id === showIconPicker.questId)
+        if (!sq) return null
+        const currentImageKey = quests.sideQuestImageKeys?.[sq.id]
+        return (
+          <QuestIconPickerModal
+            quest={{ id: sq.id, imageKey: currentImageKey }}
+            accentColor={child.theme.accent}
+            bgColor={child.theme.bg}
+            onSave={imageKey => {
+              onUpdateQuests(prev => ({
+                ...prev,
+                sideQuestImageKeys: { ...(prev.sideQuestImageKeys || {}), [sq.id]: imageKey || undefined },
+              }))
+              setShowIconPicker(null)
+            }}
+            onClose={() => setShowIconPicker(null)}
+          />
+        )
+      }
+
       const allSections = ['morning', 'afternoon', 'evening']
       let foundQuest = null
       for (const s of allSections) {

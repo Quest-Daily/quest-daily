@@ -67,7 +67,11 @@ export default function App() {
   const [quests, setQuests] = useState(() => {
     try {
       const saved = localStorage.getItem('quest-daily-quests')
-      if (saved) return JSON.parse(saved)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (!parsed.sideQuestImageKeys) parsed.sideQuestImageKeys = {}
+        return parsed
+      }
     } catch {}
     return QUESTS
   })
