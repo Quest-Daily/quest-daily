@@ -8,6 +8,7 @@ import TicketShape from '../components/TicketShape'
 import { printQuestComplete, printQuestSheet } from '../utils/printer'
 import AddQuestModal from '../components/AddQuestModal'
 import NoteScheduleModal from '../components/NoteScheduleModal'
+import QuestIconPickerModal from '../components/QuestIconPickerModal'
 
 function spawnConfetti(centerX, centerY) {
   const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#c77dff', '#ff9f43', '#ff9f43', '#ffd93d']
@@ -98,6 +99,7 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
   const [showStickerPicker, setShowStickerPicker] = useState(false) // false | 'add' | 'change'
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [showNoteSchedule, setShowNoteSchedule] = useState(null) // note idx or null
+  const [showIconPicker, setShowIconPicker] = useState(null) // { questId } or null
   const [viewingDay, setViewingDay] = useState(null) // null = today, or ISO date string 'YYYY-MM-DD'
   const [calMonth, setCalMonth] = useState(() => ({ year: new Date().getFullYear(), month: new Date().getMonth() }))
   const [calPos, setCalPos] = useState({ x: 82, y: 52 })
@@ -1179,6 +1181,20 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
                   ))}
                 </div>
 
+                {/* Change icon button */}
+                <button
+                  onClick={e => { e.stopPropagation(); setShowIconPicker({ questId: quest.id }) }}
+                  title="Change icon"
+                  style={{
+                    position: 'absolute', bottom: 12, left: 12, zIndex: 10,
+                    width: 26, height: 26, borderRadius: '50%',
+                    background: '#f0e8e0', border: 'none',
+                    cursor: 'pointer', fontSize: 13,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#9a8fa6', opacity: 0.7,
+                  }}
+                >🖼️</button>
+
                 <button
                   onClick={() => { if (!questDragInfo.current && !viewingDay) toggleQuest(activeTab, quest.id) }}
                   className="press-btn"
@@ -1656,6 +1672,36 @@ export default function ChildView({ childId, state, quests, onUpdate, onUpdateQu
         onClose={() => setShowNoteSchedule(null)}
       />
     )}
+
+    {showIconPicker && (() => {
+      const allSections = ['morning', 'afternoon', 'evening']
+      let foundQuest = null
+      for (const s of allSections) {
+        foundQuest = quests[s]?.find(q => q.id === showIconPicker.questId)
+        if (foundQuest) break
+      }
+      if (!foundQuest) return null
+      return (
+        <QuestIconPickerModal
+          quest={foundQuest}
+          accentColor={child.theme.accent}
+          bgColor={child.theme.bg}
+          onSave={imageKey => {
+            onUpdateQuests(prev => {
+              const next = { ...prev }
+              for (const s of allSections) {
+                if (next[s]?.some(q => q.id === showIconPicker.questId)) {
+                  next[s] = next[s].map(q => q.id === showIconPicker.questId ? { ...q, imageKey: imageKey ?? undefined } : q)
+                }
+              }
+              return next
+            })
+            setShowIconPicker(null)
+          }}
+          onClose={() => setShowIconPicker(null)}
+        />
+      )
+    })()}
     </>
   )
 }
