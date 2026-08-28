@@ -28,7 +28,6 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
     })
   }
 
-  // Collect all pending suggestions across all kids
   const allSuggestions = CHILD_ORDER.flatMap(id =>
     (childState[id]?.suggestions || [])
       .filter(s => s.status === 'pending')
@@ -131,7 +130,6 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
                 <Stat label="Week" value={`${state.weekDays.filter(Boolean).length}/7`} icon="📅" bg="#faf0ec" color="#8a7f86" />
               </div>
 
-              {/* Quest completion breakdown */}
               <div style={{ marginTop: 18 }}>
                 {['morning', 'afternoon', 'evening'].map(part => {
                   const disabled = state.disabledQuests || []
@@ -161,7 +159,6 @@ export default function ParentDashboard({ childState, quests, onUpdateQuests, on
                 })}
               </div>
 
-              {/* Routines */}
               <div style={{ marginTop: 16 }}>
                 <div style={{ fontSize: 12, fontFamily: "'Space Mono', monospace", color: '#9a8fa6', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Routines</div>
                 {[
@@ -545,7 +542,6 @@ function ManageQuestsPanel({ quests, onUpdateQuests, childState, onUpdate }) {
   return (
     <div style={{ background: '#fff', borderRadius: 22, padding: '28px 32px', boxShadow: '0 3px 14px rgba(58,51,64,.06)', marginBottom: 0 }}>
 
-      {/* Day filter + clear */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#9a8fa6', letterSpacing: '0.12em', textTransform: 'uppercase', marginRight: 4 }}>Filter:</span>
         {['all', ...DAYS_OF_WEEK].map(day => (
@@ -785,7 +781,6 @@ function QuestForm({ initial, onSave, onCancel, isNew, defaultSection }) {
         </div>
       </div>
 
-      {/* Image picker */}
       <div>
         <div style={{
           fontFamily: "'Space Mono', monospace", fontSize: 10,
@@ -862,7 +857,6 @@ function QuestForm({ initial, onSave, onCancel, isNew, defaultSection }) {
         )}
       </div>
 
-      {/* Recurrence */}
       <div>
         <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>How often?</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -914,7 +908,6 @@ function QuestForm({ initial, onSave, onCancel, isNew, defaultSection }) {
         )}
       </div>
 
-      {/* Section picker (new quests only) */}
       {isNew && (
         <div>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>Also show in</div>
@@ -937,7 +930,6 @@ function QuestForm({ initial, onSave, onCancel, isNew, defaultSection }) {
         </div>
       )}
 
-      {/* Child assignment (new quests only) */}
       {isNew && (
         <div>
           <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6', marginBottom: 8 }}>Assign to</div>
@@ -1010,8 +1002,6 @@ function Stat({ label, value, icon, bg, color }) {
   )
 }
 
-// ── Manage shops panel ─────────────────────────────────────────────────────
-
 const DEFAULT_CATEGORIES = ['Gaming', 'Toys', 'Clothes', 'Food', 'Activities', 'Money']
 
 function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue }) {
@@ -1021,14 +1011,12 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
     DEFAULT_CATEGORIES
   )
 
-  // Merge saved + any categories already used on items (in case of old data)
   const allItemCategories = CHILD_ORDER.flatMap(id =>
     (childState[id]?.shopItems || []).map(i => i.category).filter(Boolean)
   )
   const categories = [...new Set([...savedCategories, ...allItemCategories])]
 
   function handleAdd({ name, emoji, photo, ticketPrice, children, category }) {
-    // Persist new category for future use
     if (category && !savedCategories.map(c => c.toLowerCase()).includes(category.toLowerCase())) {
       const display = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()
       setSavedCategories(prev => [...prev, display])
@@ -1068,7 +1056,6 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
         boxShadow: '0 3px 14px rgba(58,51,64,.06)',
         marginBottom: 40,
       }}>
-        {/* Ticket value setting */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 14,
           padding: '14px 18px',
@@ -1102,7 +1089,6 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
           </div>
         </div>
 
-        {/* Category manager */}
         <CategoryManager
           categories={categories}
           onDelete={deleteCategory}
@@ -1114,7 +1100,6 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
           }}
         />
 
-        {/* Big "Add from photo" CTA */}
         <button
           onClick={() => setShowModal(true)}
           style={{
@@ -1141,7 +1126,6 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
           <div style={{ fontSize: 22, opacity: 0.7 }}>→</div>
         </button>
 
-        {/* Per-child shop item lists */}
         {CHILD_ORDER.map((id, ci) => {
           const child = CHILDREN[id]
           const items = childState[id]?.shopItems || []
@@ -1211,8 +1195,6 @@ function ManageShopsPanel({ childState, onUpdate, ticketValue, onSetTicketValue 
     </>
   )
 }
-
-// ── Category manager ──────────────────────────────────────────────────────
 
 function CategoryManager({ categories, onDelete, onAdd }) {
   const [newCat, setNewCat] = useState('')
@@ -1285,10 +1267,8 @@ function CategoryManager({ categories, onDelete, onAdd }) {
   )
 }
 
-// ── Add-from-photo modal ───────────────────────────────────────────────────
-
 function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
-  const [step, setStep] = useState('pick') // 'pick' | 'analyzing' | 'form'
+  const [step, setStep] = useState('pick')
   const [preview, setPreview] = useState(null)
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('🎁')
@@ -1374,7 +1354,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
         margin: '0 auto',
         maxHeight: '92vh', overflowY: 'auto',
       }}>
-        {/* Modal header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#3a3340' }}>
             Add to shop
@@ -1389,7 +1368,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
           >×</button>
         </div>
 
-        {/* STEP: pick */}
         {step === 'pick' && (
           <label style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -1414,7 +1392,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
           </label>
         )}
 
-        {/* STEP: analyzing */}
         {step === 'analyzing' && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             {preview && (
@@ -1432,10 +1409,8 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
           </div>
         )}
 
-        {/* STEP: form */}
         {step === 'form' && (
           <>
-            {/* Photo preview */}
             {preview && (
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
                 <img src={preview} alt="Product" style={{
@@ -1453,7 +1428,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
               }}>{error}</div>
             )}
 
-            {/* Name + emoji */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
               <input
                 value={emoji}
@@ -1474,7 +1448,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
               />
             </div>
 
-            {/* Category */}
             <div style={{ marginBottom: 16 }}>
               <div style={{
                 fontFamily: "'Space Mono', monospace", fontSize: 11,
@@ -1504,7 +1477,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
               />
             </div>
 
-            {/* Ticket price */}
             <div style={{ marginBottom: 22 }}>
               <div style={{
                 fontFamily: "'Space Mono', monospace", fontSize: 11,
@@ -1537,7 +1509,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
               </div>
             </div>
 
-            {/* Child selector */}
             <div style={{ marginBottom: 26 }}>
               <div style={{
                 fontFamily: "'Space Mono', monospace", fontSize: 11,
@@ -1576,7 +1547,6 @@ function AddFromPhotoModal({ ticketValue, categories, onAdd, onClose }) {
               </div>
             </div>
 
-            {/* Submit */}
             <button
               onClick={handleAdd}
               disabled={!canSubmit}
