@@ -13,6 +13,7 @@ function parseHash() {
   const h = window.location.hash.slice(1)
   if (h === 'home') return { screen: 'family-home', child: null }
   if (h === 'jessie') return { screen: 'parent-profile', child: null }
+  if (h === 'chris') return { screen: 'chris-profile', child: null }
   if (h.startsWith('child/') && CHILD_ORDER.includes(h.slice(6))) return { screen: 'child-view', child: h.slice(6) }
   if (h.startsWith('shop/') && CHILD_ORDER.includes(h.slice(5))) return { screen: 'shop', child: h.slice(5) }
   if (h.startsWith('suggest/') && CHILD_ORDER.includes(h.slice(8))) return { screen: 'suggest-reward', child: h.slice(8) }
@@ -38,12 +39,14 @@ export default function App() {
           }
           if (!parsed[id].disabledQuests) parsed[id].disabledQuests = []
           if (!parsed[id].notePositions) parsed[id].notePositions = initial[id].notePositions
+          // Remove stuck top-left stickers from each board
           if (parsed[id].headerStickers) {
             const toRemove = { hendrix: 'rocket', max: 'unicorn', felix: 'bunny' }
             if (toRemove[id]) {
               parsed[id].headerStickers = parsed[id].headerStickers.filter(s => s.id !== toRemove[id])
             }
           }
+          // Migrate old headerStickers (string/null array) to object array
           if (!parsed[id].headerStickers) {
             parsed[id].headerStickers = []
           } else if (parsed[id].headerStickers.some(s => s === null || typeof s === 'string')) {
@@ -71,6 +74,7 @@ export default function App() {
         const parsed = JSON.parse(saved)
         if (!parsed.routineOverrides) parsed.routineOverrides = {}
         if (!parsed.sideQuestOverrides) {
+          // migrate old sideQuestImageKeys to sideQuestOverrides
           const oldKeys = parsed.sideQuestImageKeys || {}
           parsed.sideQuestOverrides = Object.fromEntries(
             Object.entries(oldKeys).map(([id, imageKey]) => [id, { imageKey }])
@@ -83,10 +87,12 @@ export default function App() {
     return QUESTS
   })
 
+  // Keep URL hash in sync so reloading restores the current screen
   useEffect(() => {
     const hash =
       screen === 'family-home'                      ? '#home' :
       screen === 'parent-profile'                   ? '#jessie' :
+      screen === 'chris-profile'                    ? '#chris' :
       screen === 'child-view'   && currentChild     ? `#child/${currentChild}` :
       screen === 'shop'         && currentChild     ? `#shop/${currentChild}` :
       screen === 'suggest-reward' && currentChild   ? `#suggest/${currentChild}` :
@@ -115,6 +121,7 @@ export default function App() {
     return <SignIn onSelect={who => {
       if (who === 'parent') setScreen('parent-pin')
       else if (who === 'jessie') setScreen('parent-profile')
+      else if (who === 'chris') setScreen('chris-profile')
       else goToChild(who, 'child-view')
     }} />
   }
@@ -181,6 +188,16 @@ export default function App() {
   if (screen === 'parent-profile') {
     return (
       <ParentProfile
+        person="jessie"
+        onBack={() => setScreen('signin')}
+      />
+    )
+  }
+
+  if (screen === 'chris-profile') {
+    return (
+      <ParentProfile
+        person="chris"
         onBack={() => setScreen('signin')}
       />
     )
@@ -205,6 +222,8 @@ export default function App() {
 
   return <SignIn onSelect={who => {
     if (who === 'parent') setScreen('parent-pin')
+    else if (who === 'jessie') setScreen('parent-profile')
+    else if (who === 'chris') setScreen('chris-profile')
     else goToChild(who, 'child-view')
   }} />
 }

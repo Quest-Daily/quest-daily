@@ -1,11 +1,12 @@
 import { CHILDREN, CHILD_ORDER } from '../data'
-import { PARENT_PROFILE } from './ParentProfile'
+import { PARENT_PROFILE, CHRIS_PROFILE } from './ParentProfile'
 import Avatar from '../components/Avatar'
 import Logo from '../components/Logo'
 import { useLocalStorage } from '../hooks'
 
 export default function SignIn({ onSelect }) {
-  const [photo] = useLocalStorage('photo_jessie', null)
+  const [photoJessie] = useLocalStorage('photo_jessie', null)
+  const [photoChris] = useLocalStorage('photo_chris', null)
   return (
     <div style={{
       minHeight: '100dvh',
@@ -120,8 +121,8 @@ export default function SignIn({ onSelect }) {
             background: PARENT_PROFILE.theme.accent,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            {photo
-              ? <img src={photo} alt="Jessie" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {photoJessie
+              ? <img src={photoJessie} alt="Jessie" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               : <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 48, color: '#fff' }}>J</span>
             }
           </div>
@@ -132,6 +133,52 @@ export default function SignIn({ onSelect }) {
             color: '#3a3340',
             marginTop: 16,
           }}>{PARENT_PROFILE.name}</div>
+        </button>
+
+        {/* Chris's profile */}
+        <button
+          onClick={() => onSelect('chris')}
+          className="press-btn"
+          style={{
+            width: 180,
+            background: CHRIS_PROFILE.theme.bg,
+            borderRadius: 26,
+            padding: '28px 20px',
+            boxShadow: `0 8px 22px ${CHRIS_PROFILE.theme.shadow}`,
+            textAlign: 'center',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.04)'
+            e.currentTarget.style.boxShadow = `0 12px 28px ${CHRIS_PROFILE.theme.shadowDeep}`
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1)'
+            e.currentTarget.style.boxShadow = `0 8px 22px ${CHRIS_PROFILE.theme.shadow}`
+          }}
+        >
+          <div style={{
+            width: 110, height: 110,
+            borderRadius: 24,
+            overflow: 'hidden',
+            margin: '0 auto',
+            background: CHRIS_PROFILE.theme.accent,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {photoChris
+              ? <img src={photoChris} alt="Chris" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              : <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 48, color: '#fff' }}>C</span>
+            }
+          </div>
+          <div style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 27,
+            lineHeight: 1.15,
+            color: '#3a3340',
+            marginTop: 16,
+          }}>{CHRIS_PROFILE.name}</div>
         </button>
 
         <button

@@ -1,37 +1,61 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLocalStorage } from '../hooks'
+import { STICKERS, STICKER_CATEGORIES } from '../data'
+import { CUSTOM_STICKER_IMAGES } from '../assets/stickers/index'
 
-const PARENT_THEME = {
-  bg: '#fef3e8',
-  accent: '#c27a3a',
-  dashed: '#f5d5aa',
-  shadow: 'rgba(194,122,58,.16)',
-  shadowDeep: 'rgba(194,122,58,.24)',
-  textMuted: '#9c6330',
+// ── Theme presets ──────────────────────────────────────────────────────────────
+
+const THEME_PRESETS = [
+  { key: 'pink',   bg: '#fde8ef', accent: '#b5546a', dashed: '#f5c2d0', shadow: 'rgba(181,84,106,.16)', shadowDeep: 'rgba(181,84,106,.24)', textMuted: '#9a4560' },
+  { key: 'yellow', bg: '#faf3d4', accent: '#9a8428', dashed: '#e0cc7a', shadow: 'rgba(154,132,40,.16)', shadowDeep: 'rgba(154,132,40,.24)', textMuted: '#7a6820' },
+  { key: 'purple', bg: '#efe2f5', accent: '#a8689a', dashed: '#d3bce6', shadow: 'rgba(168,104,154,.16)', shadowDeep: 'rgba(168,104,154,.22)', textMuted: '#8a5a8a' },
+  { key: 'blue',   bg: '#d8e6f5', accent: '#4f7099', dashed: '#b3cdea', shadow: 'rgba(90,108,132,.16)', shadowDeep: 'rgba(90,108,132,.22)', textMuted: '#4f7099' },
+  { key: 'green',  bg: '#e7f0e4', accent: '#5b8a5c', dashed: '#c2dabe', shadow: 'rgba(91,138,92,.16)', shadowDeep: 'rgba(91,138,92,.22)', textMuted: '#4e7a4f' },
+  { key: 'peach',  bg: '#fce8d4', accent: '#c27a3a', dashed: '#f5c8aa', shadow: 'rgba(194,122,58,.16)', shadowDeep: 'rgba(194,122,58,.24)', textMuted: '#9c6330' },
+]
+
+const DEFAULT_THEME_KEY = { jessie: 'pink', chris: 'yellow' }
+
+const PROFILES_CONFIG = {
+  jessie: { id: 'jessie', name: 'Jessie', avatar: 'J' },
+  chris:  { id: 'chris',  name: 'Chris',  avatar: 'C' },
 }
 
-export const PARENT_PROFILE = {
-  id: 'jessie',
-  name: 'Jessie',
-  avatar: 'J',
-  theme: PARENT_THEME,
-}
+export const PARENT_PROFILE = { ...PROFILES_CONFIG.jessie, theme: THEME_PRESETS[0] }
+export const CHRIS_PROFILE  = { ...PROFILES_CONFIG.chris,  theme: THEME_PRESETS[1] }
+
+// ── Shared constants ───────────────────────────────────────────────────────────
 
 const TODO_PRIORITIES = [
-  { key: 'today',   label: 'Today',     bg: '#fde8ef', color: '#b5546a' },
-  { key: 'week',    label: 'This week', bg: '#fae7c4', color: '#9c7a36' },
-  { key: 'month',   label: 'This month',bg: '#e7f0e4', color: '#4e7a4f' },
-  { key: 'someday', label: 'Someday',   bg: '#efe2f5', color: '#8a5a8a' },
+  { key: 'today',   label: 'Today',      bg: '#fde8ef', color: '#b5546a' },
+  { key: 'week',    label: 'This week',  bg: '#fae7c4', color: '#9c7a36' },
+  { key: 'month',   label: 'This month', bg: '#e7f0e4', color: '#4e7a4f' },
+  { key: 'someday', label: 'Someday',    bg: '#efe2f5', color: '#8a5a8a' },
 ]
 
 const REMINDER_TIMEFRAMES = [
-  { key: 'today',   label: 'Today' },
-  { key: 'week',    label: 'This week' },
-  { key: 'month',   label: 'This month' },
-  { key: 'all',     label: 'All' },
+  { key: 'today', label: 'Today' },
+  { key: 'week',  label: 'This week' },
+  { key: 'month', label: 'This month' },
+  { key: 'all',   label: 'All' },
 ]
 
 const GROCERY_CATS = ['Fruit & Veg', 'Meat', 'Dairy', 'Bakery', 'Pantry', 'Drinks', 'Cleaning', 'Other']
+
+const FAMILY_NOTE_COLORS = [
+  { key: 'amber',  bg: '#fef3e8', border: '#f5d5aa', color: '#9c6330' },
+  { key: 'pink',   bg: '#fde8ef', border: '#f5c2d0', color: '#a0475e' },
+  { key: 'green',  bg: '#e7f0e4', border: '#c2dabe', color: '#4e7a4f' },
+  { key: 'blue',   bg: '#deeaf7', border: '#b3cfee', color: '#3d6a99' },
+  { key: 'purple', bg: '#efe2f5', border: '#d3bce6', color: '#7a4a8a' },
+]
+
+const BOARD_NOTE_COLORS = ['#fae7c4', '#fde8ef', '#d8e6f5', '#e7f0e4']
+
+const WHITE_OUTLINE = [
+  '-5px -5px 0 #fff', '5px -5px 0 #fff', '-5px 5px 0 #fff', '5px 5px 0 #fff',
+  '-5px 0 0 #fff', '5px 0 0 #fff', '0 -5px 0 #fff', '0 5px 0 #fff',
+].join(', ')
 
 function todayStr() {
   const d = new Date()
@@ -54,9 +78,77 @@ function isThisMonth(dateStr) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
 }
 
-export default function ParentProfile({ onBack, parentName = 'Jessie' }) {
-  const [photo] = useLocalStorage('photo_jessie', null)
+// ── Noteboard handle components ────────────────────────────────────────────────
+
+function RotateHandle({ onPointerDown }) {
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      style={{
+        position: 'absolute', top: -34, left: '50%', transform: 'translateX(-50%)',
+        width: 24, height: 24, borderRadius: '50%',
+        background: '#fff', border: '2.5px solid #3a3340',
+        cursor: 'grab', zIndex: 30, touchAction: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a3340" strokeWidth="2.5">
+        <path d="M21 12a9 9 0 1 1-9-9" /><polyline points="21 3 21 9 15 9" />
+      </svg>
+    </div>
+  )
+}
+
+function ResizeHandle({ onPointerDown }) {
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      style={{
+        position: 'absolute', bottom: -11, right: -11,
+        width: 22, height: 22, borderRadius: '50%',
+        background: '#fff', border: '2.5px solid #3a3340',
+        cursor: 'nwse-resize', zIndex: 30, touchAction: 'none',
+      }}
+    />
+  )
+}
+
+function DeleteBtn({ onDelete }) {
+  return (
+    <button
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => { e.stopPropagation(); onDelete() }}
+      style={{
+        position: 'absolute', top: -13, right: -13,
+        width: 26, height: 26, borderRadius: '50%',
+        background: '#3a3340', color: '#fff',
+        border: 'none', cursor: 'pointer', fontSize: 15,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30,
+      }}
+    >×</button>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
+export default function ParentProfile({ onBack, person = 'jessie' }) {
+  const profile = PROFILES_CONFIG[person] || PROFILES_CONFIG.jessie
+  const [photo] = useLocalStorage(`photo_${person}`, null)
   const [tab, setTab] = useState('todos')
+  const [themeKey, setThemeKey] = useLocalStorage(`quest-daily-${person}-theme-key`, DEFAULT_THEME_KEY[person] || 'pink')
+  const [showThemePicker, setShowThemePicker] = useState(false)
+
+  const theme = THEME_PRESETS.find(t => t.key === themeKey) || THEME_PRESETS[0]
+
+  // Noteboard state
+  const [boardStickers, setBoardStickers] = useLocalStorage(`quest-daily-${person}-board-stickers`, [])
+  const [boardNotes, setBoardNotes] = useLocalStorage(`quest-daily-${person}-board-notes`, [])
+  const [selected, setSelected] = useState(null)
+  const [dragState, setDragState] = useState(null)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [stickerCategory, setStickerCategory] = useState('custom')
+  const headerRef = useRef(null)
+  const movedRef = useRef(false)
 
   const TABS = [
     { key: 'todos',     label: '✓ To-do'    },
@@ -65,61 +157,427 @@ export default function ParentProfile({ onBack, parentName = 'Jessie' }) {
     { key: 'notes',     label: '📝 Notes'     },
   ]
 
+  function updateStickerAt(idx, changes) {
+    setBoardStickers(prev => prev.map((st, i) => i === idx ? { ...st, ...changes } : st))
+  }
+  function updateNoteAt(idx, changes) {
+    setBoardNotes(prev => prev.map((n, i) => i === idx ? { ...n, ...changes } : n))
+  }
+
+  function startDrag(e, type, idx, action) {
+    e.preventDefault()
+    movedRef.current = false
+    const rect = headerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const item = (type === 'sticker' ? boardStickers : boardNotes)[idx]
+    if (!item) return
+    const centerX = rect.left + (item.x / 100) * rect.width
+    const centerY = rect.top + (item.y / 100) * rect.height
+    setSelected({ type, idx })
+    setDragState({
+      type, idx, action,
+      startX: e.clientX, startY: e.clientY,
+      origX: item.x, origY: item.y,
+      origSize: item.size || 72,
+      origScale: item.scale || 1,
+      origRotate: item.rotate || 0,
+      centerX, centerY, rect,
+      startAngle: Math.atan2(e.clientY - centerY, e.clientX - centerX),
+      startDist: Math.hypot(e.clientX - centerX, e.clientY - centerY) || 1,
+    })
+  }
+
+  function onHeaderPointerMove(e) {
+    if (!dragState) return
+    e.preventDefault()
+    const { type, idx, action, startX, startY, origX, origY, origSize, origScale, origRotate, centerX, centerY, rect, startAngle, startDist } = dragState
+    if (Math.hypot(e.clientX - startX, e.clientY - startY) > 4) movedRef.current = true
+    const upd = type === 'sticker'
+      ? ch => updateStickerAt(idx, ch)
+      : ch => updateNoteAt(idx, ch)
+    if (action === 'move') {
+      upd({
+        x: Math.max(2, Math.min(98, origX + ((e.clientX - startX) / rect.width) * 100)),
+        y: Math.max(2, Math.min(98, origY + ((e.clientY - startY) / rect.height) * 100)),
+      })
+    } else if (action === 'resize') {
+      const ratio = Math.hypot(e.clientX - centerX, e.clientY - centerY) / startDist
+      if (type === 'sticker') upd({ size: Math.max(32, Math.min(180, origSize * ratio)) })
+      else upd({ scale: Math.max(0.4, Math.min(3, origScale * ratio)) })
+    } else if (action === 'rotate') {
+      const delta = (Math.atan2(e.clientY - centerY, e.clientX - centerX) - startAngle) * (180 / Math.PI)
+      upd({ rotate: origRotate + delta })
+    }
+  }
+
+  function onHeaderPointerUp() {
+    setDragState(null)
+    setTimeout(() => { movedRef.current = false }, 80)
+  }
+
+  function addSticker(stickerId) {
+    setBoardStickers(prev => [...prev, { id: stickerId, x: 50, y: 50, size: 72, rotate: 0 }])
+    setSelected({ type: 'sticker', idx: boardStickers.length })
+    setShowStickerPicker(false)
+  }
+
+  function addNote() {
+    const color = BOARD_NOTE_COLORS[boardNotes.length % BOARD_NOTE_COLORS.length]
+    setBoardNotes(prev => [...prev, { id: `note-${Date.now()}`, x: 50, y: 50, scale: 1, rotate: -1, text: 'Tap to edit...', color }])
+    setSelected({ type: 'note', idx: boardNotes.length })
+  }
+
+  function deleteSelected() {
+    if (!selected) return
+    if (selected.type === 'sticker') {
+      setBoardStickers(prev => prev.filter((_, i) => i !== selected.idx))
+    } else {
+      setBoardNotes(prev => prev.filter((_, i) => i !== selected.idx))
+    }
+    setSelected(null)
+  }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (!selected) return
+      if (e.key !== 'Backspace' && e.key !== 'Delete') return
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      deleteSelected()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selected])
+
+  const filteredStickers = STICKERS.filter(s => s.category === stickerCategory)
+
   return (
     <div style={{
       minHeight: '100dvh',
-      background: PARENT_THEME.bg,
+      background: theme.bg,
       fontFamily: "'Hanken Grotesk', sans-serif",
       color: '#3a3340',
     }}>
-      {/* Header */}
-      <div style={{
-        background: PARENT_THEME.accent,
-        padding: '48px 28px 28px',
-        display: 'flex',
-        alignItems: 'flex-end',
-        gap: 20,
-      }}>
+      {/* Noteboard header */}
+      <div
+        ref={headerRef}
+        style={{
+          background: theme.bg,
+          position: 'relative',
+          minHeight: 300,
+          overflow: selected ? 'visible' : 'hidden',
+          touchAction: dragState ? 'none' : 'auto',
+          userSelect: 'none',
+        }}
+        onPointerMove={onHeaderPointerMove}
+        onPointerUp={onHeaderPointerUp}
+        onPointerDown={e => { if (e.target === e.currentTarget && !movedRef.current) setSelected(null) }}
+      >
+        {/* Back button */}
         <button
-          onClick={onBack}
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => { e.stopPropagation(); onBack() }}
           style={{
-            position: 'absolute', top: 16, left: 16,
-            background: 'rgba(255,255,255,.2)', border: 'none',
+            position: 'absolute', top: 16, left: 16, zIndex: 20,
+            background: 'rgba(255,255,255,.72)', border: 'none',
             borderRadius: 999, padding: '8px 16px',
             fontFamily: "'Space Mono', monospace", fontSize: 11,
-            color: '#fff', cursor: 'pointer',
-            letterSpacing: '0.06em',
+            color: theme.textMuted, cursor: 'pointer',
+            letterSpacing: '0.06em', backdropFilter: 'blur(6px)',
           }}
         >← Home</button>
 
-        {/* Avatar */}
+        {/* Theme picker button */}
+        <button
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => { e.stopPropagation(); setShowThemePicker(v => !v); setShowStickerPicker(false) }}
+          title="Change colour theme"
+          style={{
+            position: 'absolute', top: 16, right: 16, zIndex: 20,
+            background: 'rgba(255,255,255,.72)', border: 'none',
+            borderRadius: 999, padding: '7px 11px',
+            fontSize: 16, cursor: 'pointer', backdropFilter: 'blur(6px)',
+          }}
+        >🎨</button>
+
+        {/* Theme picker panel */}
+        {showThemePicker && (
+          <div
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', top: 56, right: 16, zIndex: 50,
+              background: '#fff', borderRadius: 18,
+              padding: '14px 16px',
+              boxShadow: '0 8px 28px rgba(58,51,64,.18)',
+              display: 'flex', flexDirection: 'column', gap: 10,
+            }}
+          >
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9a8fa6' }}>Colour theme</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {THEME_PRESETS.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => { setThemeKey(t.key); setShowThemePicker(false) }}
+                  title={t.key.charAt(0).toUpperCase() + t.key.slice(1)}
+                  style={{
+                    width: 30, height: 30, borderRadius: '50%',
+                    background: t.bg, border: 'none', cursor: 'pointer',
+                    outline: themeKey === t.key ? `3px solid ${t.accent}` : `2px solid ${t.dashed}`,
+                    outlineOffset: 2, transition: 'outline 0.15s',
+                    boxShadow: `0 2px 6px ${t.shadow}`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Avatar + name */}
         <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          overflow: 'hidden', flexShrink: 0,
-          background: 'rgba(255,255,255,.25)',
-          border: '2px solid rgba(255,255,255,.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'absolute', bottom: 20, left: 20, zIndex: 5,
+          display: 'flex', alignItems: 'flex-end', gap: 14,
+          pointerEvents: 'none',
         }}>
-          {photo
-            ? <img src={photo} alt={parentName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            : <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, color: '#fff' }}>
-                {parentName[0]}
-              </span>
-          }
+          <div style={{
+            width: 64, height: 64, borderRadius: 18,
+            overflow: 'hidden', flexShrink: 0,
+            background: 'rgba(255,255,255,.55)',
+            border: `2px solid ${theme.dashed}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 4px 16px ${theme.shadow}`,
+          }}>
+            {photo
+              ? <img src={photo} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: theme.accent }}>{profile.avatar}</span>
+            }
+          </div>
+          <div style={{ paddingBottom: 4 }}>
+            <div style={{
+              fontFamily: "'Space Mono', monospace", fontSize: 9,
+              letterSpacing: '0.22em', textTransform: 'uppercase',
+              color: theme.textMuted, marginBottom: 3, opacity: 0.8,
+            }}>My space</div>
+            <h1 style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: 'clamp(28px, 6vw, 38px)',
+              color: theme.accent, lineHeight: 1, margin: 0,
+            }}>{profile.name}</h1>
+          </div>
         </div>
 
-        <div>
-          <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: 10,
-            letterSpacing: '0.22em', textTransform: 'uppercase',
-            color: 'rgba(255,255,255,.7)', marginBottom: 4,
-          }}>My space</div>
-          <h1 style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: 'clamp(30px, 6vw, 42px)',
-            color: '#fff', lineHeight: 1,
-          }}>{parentName}</h1>
+        {/* Add controls */}
+        <div style={{
+          position: 'absolute', bottom: 20, right: 12, zIndex: 20,
+          display: 'flex', gap: 6,
+        }}>
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); addNote(); setShowStickerPicker(false); setShowThemePicker(false) }}
+            style={{
+              background: 'rgba(255,255,255,.72)', border: `1.5px dashed ${theme.dashed}`,
+              borderRadius: 12, padding: '6px 11px', fontSize: 12, cursor: 'pointer',
+              fontFamily: "'Space Mono', monospace", color: theme.textMuted,
+              backdropFilter: 'blur(6px)',
+            }}
+          >+ note</button>
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); setShowStickerPicker(v => !v); setShowThemePicker(false) }}
+            style={{
+              background: showStickerPicker ? theme.accent : 'rgba(255,255,255,.72)',
+              border: `1.5px dashed ${showStickerPicker ? theme.accent : theme.dashed}`,
+              borderRadius: 12, padding: '6px 11px', fontSize: 12, cursor: 'pointer',
+              fontFamily: "'Space Mono', monospace",
+              color: showStickerPicker ? '#fff' : theme.textMuted,
+              backdropFilter: 'blur(6px)', transition: 'all 0.15s',
+            }}
+          >+ sticker</button>
         </div>
+
+        {/* Sticker picker panel */}
+        {showStickerPicker && (
+          <div
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'absolute', bottom: 60, right: 12, zIndex: 50,
+              background: '#fff', borderRadius: 18,
+              padding: '14px',
+              boxShadow: '0 8px 28px rgba(58,51,64,.18)',
+              width: 276,
+              display: 'flex', flexDirection: 'column', gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {STICKER_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setStickerCategory(cat.id)}
+                  style={{
+                    padding: '4px 10px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                    background: stickerCategory === cat.id ? theme.accent : '#f0ebf0',
+                    color: stickerCategory === cat.id ? '#fff' : '#9a8fa6',
+                    fontFamily: "'Space Mono', monospace", fontSize: 9,
+                    fontWeight: stickerCategory === cat.id ? 700 : 400,
+                  }}
+                >{cat.label}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, overflowY: 'auto', maxHeight: 210 }}>
+              {filteredStickers.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => addSticker(s.id)}
+                  title={s.label}
+                  style={{
+                    width: 44, height: 44, borderRadius: 10, border: 'none',
+                    background: '#faf5f5', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 24, padding: 0,
+                    transition: 'background 0.1s',
+                  }}
+                >
+                  {s.image
+                    ? <img src={CUSTOM_STICKER_IMAGES[s.id]} alt={s.label} style={{ width: 32, height: 32, objectFit: 'contain' }} />
+                    : s.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notes on board */}
+        {boardNotes.map((note, idx) => {
+          const isSel = selected?.type === 'note' && selected?.idx === idx
+          const scale = note.scale || 1
+          const w = Math.round(190 * scale)
+          return (
+            <div
+              key={note.id}
+              style={{
+                position: 'absolute',
+                left: `${note.x}%`, top: `${note.y}%`,
+                transform: `translate(-50%, -50%) rotate(${note.rotate || 0}deg)`,
+                width: w,
+                zIndex: isSel ? 10 : 2,
+                cursor: dragState?.idx === idx && dragState?.type === 'note' ? 'grabbing' : 'grab',
+                touchAction: 'none',
+              }}
+              onPointerDown={e => { setSelected({ type: 'note', idx }); startDrag(e, 'note', idx, 'move') }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{
+                background: note.color || '#fae7c4',
+                borderRadius: 3,
+                padding: `${Math.round(28 * scale)}px ${Math.round(16 * scale)}px ${Math.round(18 * scale)}px`,
+                boxShadow: isSel
+                  ? '0 0 0 2.5px #3a3340, 0 8px 24px rgba(58,51,64,.22)'
+                  : '0 6px 14px rgba(58,51,64,.12)',
+                minHeight: Math.round(110 * scale),
+                position: 'relative',
+              }}>
+                {/* Tape */}
+                <div style={{
+                  position: 'absolute', top: -10, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: Math.round(72 * scale), height: 22,
+                  background: 'rgba(220,196,80,.38)',
+                  borderLeft: '1px dashed rgba(190,160,40,.5)',
+                  borderRight: '1px dashed rgba(190,160,40,.5)',
+                }} />
+                {isSel && (
+                  <div
+                    style={{ display: 'flex', gap: 5, marginBottom: 8, justifyContent: 'center' }}
+                    onClick={e => e.stopPropagation()}
+                    onPointerDown={e => e.stopPropagation()}
+                  >
+                    {BOARD_NOTE_COLORS.map(c => (
+                      <button key={c} onClick={() => updateNoteAt(idx, { color: c })} style={{
+                        width: 14, height: 14, borderRadius: '50%', background: c,
+                        border: note.color === c ? '2px solid #3a3340' : '2px solid transparent',
+                        cursor: 'pointer', padding: 0,
+                      }} />
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={note.text}
+                  onChange={e => updateNoteAt(idx, { text: e.target.value })}
+                  onClick={e => e.stopPropagation()}
+                  onPointerDown={e => { if (isSel) e.stopPropagation() }}
+                  readOnly={!isSel}
+                  style={{
+                    width: '100%', border: 'none', background: 'transparent',
+                    fontFamily: "'Patrick Hand', cursive",
+                    fontSize: Math.round(17 * scale),
+                    lineHeight: 1.35, color: '#6b5a3c',
+                    resize: 'none', outline: 'none',
+                    minHeight: Math.round(80 * scale),
+                    cursor: isSel ? 'text' : 'grab',
+                    pointerEvents: isSel ? 'auto' : 'none',
+                  }}
+                />
+              </div>
+              {isSel && (
+                <>
+                  <DeleteBtn onDelete={deleteSelected} />
+                  <ResizeHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'resize') }} />
+                  <RotateHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'note', idx, 'rotate') }} />
+                </>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Stickers on board */}
+        {boardStickers.map((stickerData, idx) => {
+          const def = STICKERS.find(s => s.id === stickerData.id)
+          if (!def) return null
+          const isSel = selected?.type === 'sticker' && selected?.idx === idx
+          const size = stickerData.size || 72
+          return (
+            <div
+              key={idx}
+              style={{
+                position: 'absolute',
+                left: `${stickerData.x}%`, top: `${stickerData.y}%`,
+                transform: `translate(-50%, -50%) rotate(${stickerData.rotate || 0}deg)`,
+                width: size + 24, height: size + 24,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: isSel ? 10 : 3,
+                cursor: dragState?.idx === idx && dragState?.type === 'sticker' ? 'grabbing' : 'grab',
+                touchAction: 'none',
+              }}
+              onPointerDown={e => { setSelected({ type: 'sticker', idx }); startDrag(e, 'sticker', idx, 'move') }}
+              onClick={e => e.stopPropagation()}
+            >
+              {isSel && (
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  border: '2px dashed #3a3340', opacity: 0.5,
+                }} />
+              )}
+              <div style={{ filter: 'drop-shadow(0 5px 10px rgba(58,51,64,0.22))' }}>
+                {def.image
+                  ? <img src={CUSTOM_STICKER_IMAGES[def.id]} alt={def.label} draggable={false}
+                      style={{ width: size * 0.85, height: size * 0.85, objectFit: 'contain', display: 'block' }} />
+                  : <span style={{ fontSize: size * 0.68, lineHeight: 1, display: 'block', textShadow: WHITE_OUTLINE }}>
+                      {def.emoji}
+                    </span>
+                }
+              </div>
+              {isSel && (
+                <>
+                  <DeleteBtn onDelete={deleteSelected} />
+                  <ResizeHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'sticker', idx, 'resize') }} />
+                  <RotateHandle onPointerDown={e => { e.stopPropagation(); startDrag(e, 'sticker', idx, 'rotate') }} />
+                </>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Tab bar */}
@@ -137,8 +595,8 @@ export default function ParentProfile({ onBack, parentName = 'Jessie' }) {
               flex: 1, padding: '14px 8px',
               border: 'none', background: 'none', cursor: 'pointer',
               fontFamily: "'Space Mono', monospace", fontSize: 11,
-              letterSpacing: '0.06em', color: tab === t.key ? PARENT_THEME.accent : '#9a8fa6',
-              borderBottom: `2.5px solid ${tab === t.key ? PARENT_THEME.accent : 'transparent'}`,
+              letterSpacing: '0.06em', color: tab === t.key ? theme.accent : '#9a8fa6',
+              borderBottom: `2.5px solid ${tab === t.key ? theme.accent : 'transparent'}`,
               transition: 'color 0.15s, border-color 0.15s',
               fontWeight: tab === t.key ? 700 : 400,
             }}
@@ -147,17 +605,19 @@ export default function ParentProfile({ onBack, parentName = 'Jessie' }) {
       </div>
 
       <div style={{ padding: '28px 20px 80px' }}>
-        {tab === 'todos'     && <TodosTab accentColor={PARENT_THEME.accent} />}
-        {tab === 'reminders' && <RemindersTab accentColor={PARENT_THEME.accent} />}
-        {tab === 'shopping'  && <ShoppingTab accentColor={PARENT_THEME.accent} />}
-        {tab === 'notes'     && <NotesTab accentColor={PARENT_THEME.accent} />}
+        {tab === 'todos'     && <TodosTab person={person} accentColor={theme.accent} bgColor={theme.bg} />}
+        {tab === 'reminders' && <RemindersTab person={person} accentColor={theme.accent} />}
+        {tab === 'shopping'  && <ShoppingTab accentColor={theme.accent} />}
+        {tab === 'notes'     && <NotesTab accentColor={theme.accent} />}
       </div>
     </div>
   )
 }
 
-function TodosTab({ accentColor }) {
-  const [todos, setTodos] = useLocalStorage('quest-daily-jessie-todos', [])
+// ── To-do tab ─────────────────────────────────────────────────────────────────
+
+function TodosTab({ person, accentColor, bgColor }) {
+  const [todos, setTodos] = useLocalStorage(`quest-daily-${person}-todos`, [])
   const [text, setText] = useState('')
   const [priority, setPriority] = useState('today')
   const [filter, setFilter] = useState('all')
@@ -221,7 +681,7 @@ function TodosTab({ accentColor }) {
 
   return (
     <div>
-      <style>{`@keyframes qjPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(194,122,58,.4) } 50% { box-shadow: 0 0 0 8px rgba(194,122,58,0) } }`}</style>
+      <style>{`@keyframes ppPulse { 0%,100% { box-shadow: 0 0 0 0 ${accentColor}66 } 50% { box-shadow: 0 0 0 8px ${accentColor}00 } }`}</style>
 
       <div style={{
         background: '#fff', borderRadius: 20,
@@ -263,11 +723,11 @@ function TodosTab({ accentColor }) {
               onClick={isListening ? () => { recognitionRef.current?.stop(); setIsListening(false) } : startVoice}
               style={{
                 width: 44, height: 44, borderRadius: '50%', border: 'none', flexShrink: 0,
-                background: isListening ? accentColor : '#fef3e8',
+                background: isListening ? accentColor : bgColor,
                 color: isListening ? '#fff' : accentColor,
                 fontSize: 18, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                animation: isListening ? 'qjPulse 1s ease-in-out infinite' : 'none',
+                animation: isListening ? 'ppPulse 1s ease-in-out infinite' : 'none',
                 transition: 'background 0.2s',
               }}
             >🎤</button>
@@ -369,8 +829,10 @@ function TodosTab({ accentColor }) {
   )
 }
 
-function RemindersTab({ accentColor }) {
-  const [reminders, setReminders] = useLocalStorage('quest-daily-jessie-reminders', [])
+// ── Reminders tab ─────────────────────────────────────────────────────────────
+
+function RemindersTab({ person, accentColor }) {
+  const [reminders, setReminders] = useLocalStorage(`quest-daily-${person}-reminders`, [])
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState('today')
 
@@ -408,9 +870,9 @@ function RemindersTab({ accentColor }) {
   const today = todayStr()
   const visible = reminders.filter(r => {
     if (r.done) return false
-    if (filter === 'today')  return r.date === today
-    if (filter === 'week')   return isThisWeek(r.date)
-    if (filter === 'month')  return isThisMonth(r.date)
+    if (filter === 'today') return r.date === today
+    if (filter === 'week')  return isThisWeek(r.date)
+    if (filter === 'month') return isThisMonth(r.date)
     return true
   }).sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''))
 
@@ -485,7 +947,7 @@ function RemindersTab({ accentColor }) {
                   onClick={() => setRepeat(r.key)}
                   style={{
                     padding: '5px 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                    background: repeat === r.key ? '#fef3e8' : '#f5f0f0',
+                    background: repeat === r.key ? '#f5f0f5' : '#f5f0f0',
                     color: repeat === r.key ? accentColor : '#9a8fa6',
                     fontFamily: "'Space Mono', monospace", fontSize: 10,
                     fontWeight: repeat === r.key ? 700 : 400,
@@ -547,7 +1009,7 @@ function RemindersTab({ accentColor }) {
                     {repeatLabel && (
                       <span style={{
                         fontFamily: "'Space Mono', monospace", fontSize: 9,
-                        background: '#fef3e8', color: accentColor,
+                        background: '#f5f0f5', color: accentColor,
                         padding: '2px 8px', borderRadius: 999, textTransform: 'capitalize',
                       }}>↻ {repeatLabel}</span>
                     )}
@@ -556,7 +1018,6 @@ function RemindersTab({ accentColor }) {
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button
                     onClick={() => dismissReminder(r.id)}
-                    title="Mark done"
                     style={{
                       background: '#e7f0e4', color: '#4e7a4f', border: 'none',
                       borderRadius: 999, padding: '6px 12px', fontSize: 12, fontWeight: 600,
@@ -577,6 +1038,8 @@ function RemindersTab({ accentColor }) {
   )
 }
 
+// ── Shopping tab (shared) ──────────────────────────────────────────────────────
+
 function ShoppingTab({ accentColor }) {
   const [items, setItems] = useLocalStorage('quest-daily-shopping', [])
   const [text, setText] = useState('')
@@ -592,11 +1055,7 @@ function ShoppingTab({ accentColor }) {
     if (!t) return
     setItems(prev => [...prev, {
       id: `shop-${Date.now()}`,
-      text: t,
-      qty: qty.trim() || null,
-      category,
-      done: false,
-      addedBy,
+      text: t, qty: qty.trim() || null, category, done: false, addedBy,
       addedAt: new Date().toISOString(),
     }])
     setText(''); setQty('')
@@ -617,7 +1076,6 @@ function ShoppingTab({ accentColor }) {
 
   const pendingCount = items.filter(i => !i.done).length
   const doneCount = items.filter(i => i.done).length
-
   const usedCats = [...new Set(items.map(i => i.category).filter(Boolean))]
   const allCats = [...new Set([...GROCERY_CATS, ...usedCats])]
 
@@ -655,7 +1113,7 @@ function ShoppingTab({ accentColor }) {
               onClick={() => setAddedBy(name)}
               style={{
                 padding: '4px 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: addedBy === name ? '#fef3e8' : '#f5f0f0',
+                background: addedBy === name ? '#f5f0f5' : '#f5f0f0',
                 color: addedBy === name ? accentColor : '#9a8fa6',
                 fontFamily: "'Space Mono', monospace", fontSize: 10,
                 fontWeight: addedBy === name ? 700 : 400,
@@ -700,7 +1158,7 @@ function ShoppingTab({ accentColor }) {
               onClick={() => setCategory(c)}
               style={{
                 padding: '4px 10px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: category === c ? '#fef3e8' : '#f5f0f0',
+                background: category === c ? '#f5f0f5' : '#f5f0f0',
                 color: category === c ? accentColor : '#9a8fa6',
                 fontFamily: "'Space Mono', monospace", fontSize: 9,
                 fontWeight: category === c ? 700 : 400,
@@ -779,8 +1237,7 @@ function ShoppingTab({ accentColor }) {
                     padding: '12px 16px',
                     display: 'flex', alignItems: 'center', gap: 12,
                     boxShadow: '0 2px 8px rgba(58,51,64,.05)',
-                    opacity: item.done ? 0.5 : 1,
-                    transition: 'opacity 0.2s',
+                    opacity: item.done ? 0.5 : 1, transition: 'opacity 0.2s',
                   }}>
                     <button
                       onClick={() => toggleItem(item.id)}
@@ -800,7 +1257,7 @@ function ShoppingTab({ accentColor }) {
                     {item.qty && (
                       <span style={{
                         fontFamily: "'Space Mono', monospace", fontSize: 11,
-                        color: accentColor, background: '#fef3e8',
+                        color: accentColor, background: '#f5f0f5',
                         padding: '2px 9px', borderRadius: 999, flexShrink: 0,
                       }}>{item.qty}</span>
                     )}
@@ -823,13 +1280,7 @@ function ShoppingTab({ accentColor }) {
   )
 }
 
-const NOTE_COLORS = [
-  { key: 'amber',  bg: '#fef3e8', border: '#f5d5aa', color: '#9c6330' },
-  { key: 'pink',   bg: '#fde8ef', border: '#f5c2d0', color: '#a0475e' },
-  { key: 'green',  bg: '#e7f0e4', border: '#c2dabe', color: '#4e7a4f' },
-  { key: 'blue',   bg: '#deeaf7', border: '#b3cfee', color: '#3d6a99' },
-  { key: 'purple', bg: '#efe2f5', border: '#d3bce6', color: '#7a4a8a' },
-]
+// ── Family Notes tab (shared) ──────────────────────────────────────────────────
 
 function NotesTab({ accentColor }) {
   const [notes, setNotes] = useLocalStorage('quest-daily-family-notes', [])
@@ -838,16 +1289,16 @@ function NotesTab({ accentColor }) {
 
   const [text, setText] = useState('')
   const [author, setAuthor] = useState('Jessie')
-  const [colorKey, setColorKey] = useState('amber')
+  const [colorKey, setColorKey] = useState('pink')
   const [pinned, setPinned] = useState(false)
 
   function openNew() {
-    setText(''); setAuthor('Jessie'); setColorKey('amber'); setPinned(false); setEditId(null)
+    setText(''); setAuthor('Jessie'); setColorKey('pink'); setPinned(false); setEditId(null)
     setShowForm(true)
   }
 
   function openEdit(note) {
-    setText(note.text); setAuthor(note.author); setColorKey(note.colorKey || 'amber'); setPinned(note.pinned || false)
+    setText(note.text); setAuthor(note.author); setColorKey(note.colorKey || 'pink'); setPinned(note.pinned || false)
     setEditId(note.id); setShowForm(true)
   }
 
@@ -911,7 +1362,7 @@ function NotesTab({ accentColor }) {
                 onClick={() => setAuthor(name)}
                 style={{
                   padding: '4px 12px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                  background: author === name ? '#fef3e8' : '#f5f0f0',
+                  background: author === name ? '#f5f0f5' : '#f5f0f0',
                   color: author === name ? accentColor : '#9a8fa6',
                   fontFamily: "'Space Mono', monospace", fontSize: 10,
                   fontWeight: author === name ? 700 : 400,
@@ -936,7 +1387,7 @@ function NotesTab({ accentColor }) {
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 11, fontFamily: "'Space Mono', monospace", color: '#9a8fa6', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Colour:</span>
-            {NOTE_COLORS.map(c => (
+            {FAMILY_NOTE_COLORS.map(c => (
               <button
                 key={c.key}
                 onClick={() => setColorKey(c.key)}
@@ -944,8 +1395,7 @@ function NotesTab({ accentColor }) {
                   width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer',
                   background: c.bg,
                   outline: colorKey === c.key ? `2.5px solid ${c.color}` : '2px solid transparent',
-                  outlineOffset: 2,
-                  transition: 'outline 0.1s',
+                  outlineOffset: 2, transition: 'outline 0.1s',
                 }}
               />
             ))}
@@ -982,7 +1432,7 @@ function NotesTab({ accentColor }) {
       )}
 
       {sorted.length === 0 ? (
-        <EmptyState icon="📝" title="No notes yet" sub="Leave a note for Chris, or jot something down for yourself" />
+        <EmptyState icon="📝" title="No notes yet" sub="Leave a note for the family, or pin something important" />
       ) : (
         <div style={{
           display: 'grid',
@@ -990,7 +1440,7 @@ function NotesTab({ accentColor }) {
           gap: 14,
         }}>
           {sorted.map(note => {
-            const c = NOTE_COLORS.find(x => x.key === note.colorKey) || NOTE_COLORS[0]
+            const c = FAMILY_NOTE_COLORS.find(x => x.key === note.colorKey) || FAMILY_NOTE_COLORS[1]
             const d = new Date(note.createdAt)
             const dateStr = `${d.getDate()}/${d.getMonth() + 1} · ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
             return (
@@ -1000,38 +1450,21 @@ function NotesTab({ accentColor }) {
                 borderRadius: 18, padding: '18px 18px 14px',
                 display: 'flex', flexDirection: 'column', gap: 10,
                 position: 'relative',
-                boxShadow: note.pinned ? `0 4px 16px rgba(58,51,64,.1)` : '0 2px 8px rgba(58,51,64,.05)',
+                boxShadow: note.pinned ? '0 4px 16px rgba(58,51,64,.1)' : '0 2px 8px rgba(58,51,64,.05)',
               }}>
                 {note.pinned && (
-                  <div style={{
-                    position: 'absolute', top: -8, right: 14,
-                    fontSize: 18,
-                  }}>📌</div>
+                  <div style={{ position: 'absolute', top: -8, right: 14, fontSize: 18 }}>📌</div>
                 )}
                 <div style={{ fontSize: 15, color: '#3a3340', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{note.text}</div>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  marginTop: 'auto',
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <div>
-                    <span style={{
-                      fontFamily: "'Space Mono', monospace", fontSize: 10,
-                      color: c.color, fontWeight: 700,
-                    }}>{note.author}</span>
-                    <span style={{
-                      fontFamily: "'Space Mono', monospace", fontSize: 10,
-                      color: '#b3a9be', marginLeft: 8,
-                    }}>{dateStr}</span>
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: c.color, fontWeight: 700 }}>{note.author}</span>
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#b3a9be', marginLeft: 8 }}>{dateStr}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button
                       onClick={() => togglePin(note.id)}
-                      title={note.pinned ? 'Unpin' : 'Pin'}
-                      style={{
-                        background: 'none', border: 'none', fontSize: 13,
-                        color: note.pinned ? c.color : '#c9a0a0',
-                        cursor: 'pointer', padding: '2px 4px',
-                      }}
+                      style={{ background: 'none', border: 'none', fontSize: 13, color: note.pinned ? c.color : '#c9a0a0', cursor: 'pointer', padding: '2px 4px' }}
                     >📌</button>
                     <button
                       onClick={() => openEdit(note)}
@@ -1051,6 +1484,8 @@ function NotesTab({ accentColor }) {
     </div>
   )
 }
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
 
 function EmptyState({ icon, title, sub }) {
   return (
